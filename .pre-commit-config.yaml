@@ -36,10 +36,10 @@ repos:
       -  id: python-check-blanket-type-ignore
       -  id: python-use-type-annotations
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.12
+    rev: v0.13.0
     hooks:
       - id: ruff-check
   - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: v0.0.137
+    rev: v0.0.139
     hooks:
       - id: rumdl

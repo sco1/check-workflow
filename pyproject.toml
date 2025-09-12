@@ -24,6 +24,7 @@ classifiers = [
 requires-python = ">=3.12"
 dependencies = [
     "gql[httpx]~=4.0",
+    "packaging>=25.0",
     "pyyaml~=6.0",
 ]
 
@@ -52,6 +53,7 @@ dev-dependencies = [
     "sco1-bumper~=2.0",
     "tox~=4.23",
     "tox-uv~=1.17",
+    "types-pyyaml~=6.0",
 ]
 
 [tool.black]

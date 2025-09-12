@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from gql import Client, gql
 from gql.transport.httpx import HTTPXTransport
 from httpx import Timeout
+from packaging.version import Version
 
 TOK = os.environ.get("PUBLIC_PAT", "")
 
@@ -17,10 +18,48 @@ TRANSPORT = HTTPXTransport(
 )
 CLIENT = Client(transport=TRANSPORT, fetch_schema_from_transport=True)
 
-RELEASE_QUERY = """
-query GetLatestTag($owner: String!, $repo: String!) {
+WORKFLOW_QUERY = """
+query GetWorkflows($owner: String!, $repo: String!, $target: String!) {
     repository(owner: $owner, name: $repo) {
-        releases(orderBy: {field: CREATED_AT, direction: DESC}, first: 5) {
+        object(expression: $target) {
+            ... on Tree {
+                entries {
+                    name
+                    object {
+                        ... on Blob {
+                        text
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+
+def fetch_workflows(
+    owner: str, repo_name: str, workflow_root: str = ".github/workflows/", branch: str = "main"
+) -> dict[str, str]:
+    query = gql(WORKFLOW_QUERY)
+    query.variable_values = {
+        "owner": owner,
+        "repo": repo_name,
+        "target": f"{branch}:{workflow_root}",
+    }
+    result = CLIENT.execute(query)
+
+    raw_workflows = {}
+    for wf in result["repository"]["object"]["entries"]:
+        raw_workflows[wf["name"]] = wf["object"]["text"]
+
+    return raw_workflows
+
+
+RELEASE_QUERY = """
+query GetLatestRelease($owner: String!, $repo: String!) {
+    repository(owner: $owner, name: $repo) {
+        releases(orderBy: {field: CREATED_AT, direction: DESC}, first: 1) {
             nodes {
                 tagName
                 publishedAt
@@ -34,7 +73,7 @@ query GetLatestTag($owner: String!, $repo: String!) {
 
 @dataclass(slots=True, frozen=True)
 class Release:  # noqa: D101
-    tag_name: str
+    ver: Version
     published: dt.datetime
     url: str
 
@@ -48,8 +87,9 @@ class Release:  # noqa: D101
             * `"publishedAt"`
             * `"url"`
         """
+        raw_ver = node["tagName"].removeprefix("v")
         return cls(
-            tag_name=node["tagName"],
+            ver=Version(raw_ver),
             published=dt.datetime.fromisoformat(node["publishedAt"]),
             url=node["url"],
         )
