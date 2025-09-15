@@ -1,0 +1,23 @@
+{
+    "repository": {
+        "releases": {
+            "nodes": [
+                {
+                    "tagName": "v3.1.1",
+                    "publishedAt": "2024-05-17T14:07:20Z",
+                    "url": "https://github.com/sco1/flake8-annotations/releases/tag/v3.1.1"
+                },
+                {
+                    "tagName": "v3.1.0",
+                    "publishedAt": "2024-05-06T18:47:23Z",
+                    "url": "https://github.com/sco1/flake8-annotations/releases/tag/v3.1.0"
+                },
+                {
+                    "tagName": "v3.0.1",
+                    "publishedAt": "2023-05-03T02:43:51Z",
+                    "url": "https://github.com/sco1/flake8-annotations/releases/tag/v3.0.1"
+                }
+            ]
+        }
+    }
+}

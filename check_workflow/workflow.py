@@ -11,6 +11,15 @@ class UsesSpec(t.NamedTuple):  # noqa: D101
 
     @classmethod
     def from_raw(cls, raw_spec: str) -> t.Self:
+        """
+        Build a `UsesSpec` instance from the provided workflow dependency specification.
+
+        Dependency specifications are assumed to be of the form `<user>/<repo>@<ver>`, for example:
+            * `actions/setup-python@v6`
+            * `deadsnakes/action@v3.2.0`
+
+        The resulting instance's `spec` attribute is built using a compatible release clause (`~=`).
+        """
         action, raw_ver = raw_spec.split("@")
         *_, raw_ver = raw_ver.split("/")  # May use a branch, which we don't care about
         raw_ver = raw_ver.removeprefix("v")  # Some repos may prefix their tags
@@ -32,6 +41,7 @@ class JobDependency(t.NamedTuple):  # noqa: D101
 
 
 def extract_workflow_dependencies(raw_workflow: str) -> list[JobDependency]:
+    """Extract job dependencies from the provided raw workflow YAML."""
     loaded = yaml.safe_load(raw_workflow)
 
     extracted_dependencies = []
