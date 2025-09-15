@@ -6,8 +6,11 @@ on:
     - cron: "0 9 1 * *"
 
 jobs:
-  build:
+  build-report:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
 
     steps:
     - uses: actions/checkout@v5
@@ -25,7 +28,22 @@ jobs:
         cache-dependency-glob: "uv.lock"
 
     - name: Run report
+      id: report
       env:
         PUBLIC_PAT: ${{ secrets.PUBLIC_PAT }}
-      run: |-
-        uv run --no-dev CheckWorkflow sco1 py-template
+      run: |
+        {
+          echo 'RES<<EOF'
+          uv run --no-dev CheckWorkflow sco1 py-template
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Open Issue If Any Outdated
+      if: ${{ steps.report.outputs.RES != ''}}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        today=$(date +"%Y-%m-%d")
+        gh issue create \
+          --title "($today) Outdated Dependency Report" \
+          --body '${{ steps.report.outputs.RES }}'
