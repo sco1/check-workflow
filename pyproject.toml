@@ -35,6 +35,9 @@ Repository = "https://github.com/sco1/check-workflow.git"
 Issues = "https://github.com/sco1/check-workflow/issues"
 Changelog = "https://github.com/sco1/check-workflow/blob/main/CHANGELOG.md"
 
+[project.scripts]
+CheckWorkflow = "check_workflow.cli:main"
+
 [tool.uv]
 dev-dependencies = [
     "black~=25.0",

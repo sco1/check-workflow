@@ -15,6 +15,8 @@ from packaging.version import Version
 from check_workflow import __url__, __version__
 
 TOK = os.environ.get("PUBLIC_PAT", "")
+if not TOK:
+    raise RuntimeError("No API token available")
 
 TIMEOUT = Timeout(5, read=15)  # Extend the read timeout a bit, keep the rest at default
 USER_AGENT = (

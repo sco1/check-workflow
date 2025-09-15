@@ -1,7 +1,10 @@
 import typing as t
+from collections import defaultdict
 
 import yaml
 from packaging.specifiers import SpecifierSet
+
+from check_workflow.gh_api import Release, fetch_releases
 
 
 class UsesSpec(t.NamedTuple):  # noqa: D101
@@ -59,3 +62,48 @@ def extract_workflow_dependencies(raw_workflow: str) -> list[JobDependency]:
                 )
 
     return extracted_dependencies
+
+
+class OutdatedDep(t.NamedTuple):  # noqa: D101
+    spec: JobDependency
+    latest: Release
+
+
+def report_outdated(raw_workflows: dict[str, str]) -> dict[str, list[OutdatedDep]]:
+    """Parse the provided workflow files and return a per-file list of outdated dependencies."""
+    # Cache latest release info to cut down on API calls; keyed by (owner, repo) tuples
+    seen_releases: dict[tuple[str, str], Release] = {}
+
+    outdated: dict[str, list[OutdatedDep]] = defaultdict(list)
+    for wf_name, wf in raw_workflows.items():
+        wf_deps = extract_workflow_dependencies(wf)
+        for dep in wf_deps:
+            cache_key = (dep.uses.owner, dep.uses.repo)
+            if cache_key not in seen_releases:
+                latest = fetch_releases(owner=dep.uses.owner, repo_name=dep.uses.repo)[0]
+                seen_releases[cache_key] = latest
+            else:
+                latest = seen_releases[cache_key]
+
+            if latest.ver not in dep.uses.spec:
+                outdated[wf_name].append(OutdatedDep(spec=dep, latest=latest))
+
+    return outdated
+
+
+def format_outdated(outdated: dict[str, list[OutdatedDep]]) -> str:  # noqa: D103
+    comps = []
+    header = "Job, Step Name, Action, Specified, Latest"
+    for workflow, deps in outdated.items():
+        comps.append(f"Workflow file: {workflow}")
+        comps.append(f"\t{header}")
+        comps.append(f"\t{"="*len(header)}")
+
+        for dep in deps:
+            action_string = f"{dep.spec.uses.owner}/{dep.spec.uses.repo}"
+            comps.append(
+                f"\t{dep.spec.job}, {dep.spec.step_name}, {action_string}, {dep.spec.uses.spec}, {dep.latest.ver}"  # noqa: E501
+            )
+        comps.append("")
+
+    return "\n".join(comps)
