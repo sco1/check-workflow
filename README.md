@@ -7,42 +7,8 @@
 
 Check GHA For Dependency Updates
 
-## Usage
-
-### CLI
-
-Manual reports can be generated using the `CheckWorkflow` CLI.
-
-<!-- [[[cog
-import cog
-from subprocess import PIPE, run
-out = run(["CheckWorkflow", "--help"], stdout=PIPE, encoding="ascii")
-cog.out(
-    f"\n```text\n$ CheckWorkflow --help\n{out.stdout.rstrip()}\n```\n\n"
-)
-]]] -->
-
 ```text
-$ CheckWorkflow --help
-usage: CheckWorkflow [-h] [-r ROOT] [-b BRANCH] [-m] org repo
-
-positional arguments:
-  org                  Query repository parent
-  repo                 Query repository
-
-options:
-  -h, --help           show this help message and exit
-  -r, --root ROOT      Workflow root (default: .github/workflows/)
-  -b, --branch BRANCH  Query branch (default: main)
-  -m, --markdown       Format report as markdown (default: False)
-```
-
-<!-- [[[end]]] -->
-
-For example:
-
-```text
-$ CheckWorkflow sco1 wheely-bucket
+$ CheckWorkflow sco1 check-workflow
 lint_test.yml
 +-------------+-------------------------+---------------------------+-----------+--------+
 |     Job     |        Step Name        |           Action          | Specified | Latest |
@@ -61,9 +27,80 @@ release.yml
 +-------+-----------+------------------+-----------+--------+
 ```
 
-### CRON
+## Installation
 
-A CRON job is scheduled [via GHA](https://github.com/sco1/check-workflow/blob/main/.github/workflows/check_cron.yml) to check the workflows used by [sco1/py-template](https://github.com/sco1/py-template) on the first of every month @ 0900 UTC. If outdated dependencies are found, an issue is opened under this repository summarizing the report.
+Since this is mainly intended as a personal helper, I do not intend to deploy this project to PyPI. Wheels are built in CI for each [released version](https://github.com/sco1/check-workflow/releases/latest).
+
+Alternatively, you can use a tool like `uv` or `pipx` to run or install this project as a standalone tool, e.g.:
+
+```text
+$ uvx --from git+https://github.com/sco1/check-workflow@v1.0.0 CheckWorkflow --help
+usage: CheckWorkflow [-h] {local,remote} ...
+
+positional arguments:
+  {local,remote}
+    local         Query local project
+    remote        Query remote repository
+
+options:
+  -h, --help      show this help message and exit
+```
+
+## Usage
+
+Manual reports can be generated using the `CheckWorkflow` CLI for either a local or remote project.
+
+### Local
+
+<!-- [[[cog
+import cog
+from subprocess import PIPE, run
+out = run(["CheckWorkflow", "local", "--help"], stdout=PIPE, encoding="ascii")
+cog.out(
+    f"\n```text\n$ CheckWorkflow local --help\n{out.stdout.rstrip()}\n```\n\n"
+)
+]]] -->
+
+```text
+$ CheckWorkflow local --help
+usage: CheckWorkflow local [-h] [-r ROOT] [-m]
+
+options:
+  -h, --help            show this help message and exit
+  -r ROOT, --root ROOT  Workflow root (default: ./.github/workflows/)
+  -m, --markdown        Format report as markdown (default: False)
+```
+
+<!-- [[[end]]] -->
+
+### Remote
+
+<!-- [[[cog
+import cog
+from subprocess import PIPE, run
+out = run(["CheckWorkflow", "remote", "--help"], stdout=PIPE, encoding="ascii")
+cog.out(
+    f"\n```text\n$ CheckWorkflow remote --help\n{out.stdout.rstrip()}\n```\n\n"
+)
+]]] -->
+
+```text
+$ CheckWorkflow remote --help
+usage: CheckWorkflow remote [-h] [-b BRANCH] [-r ROOT] [-m] org repo
+
+positional arguments:
+  org                   Query repository parent
+  repo                  Query repository
+
+options:
+  -h, --help            show this help message and exit
+  -b BRANCH, --branch BRANCH
+                        Query branch (default: main)
+  -r ROOT, --root ROOT  Workflow root (default: .github/workflows/)
+  -m, --markdown        Format report as markdown (default: False)
+```
+
+<!-- [[[end]]] -->
 
 ## Why Don't You Just Use Dependabot?
 

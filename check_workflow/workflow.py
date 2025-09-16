@@ -1,10 +1,12 @@
 import typing as t
 from collections import defaultdict
+from pathlib import Path
 
 import yaml
 from packaging.specifiers import SpecifierSet
 from prettytable import PrettyTable, TableStyle
 
+from check_workflow import WORKFLOW_T
 from check_workflow.gh_api import Release, fetch_releases
 
 
@@ -70,7 +72,7 @@ class OutdatedDep(t.NamedTuple):  # noqa: D101
     latest: Release
 
 
-def report_outdated(raw_workflows: dict[str, str]) -> dict[str, list[OutdatedDep]]:
+def report_outdated(raw_workflows: WORKFLOW_T) -> dict[str, list[OutdatedDep]]:
     """Parse the provided workflow files and return a per-file list of outdated dependencies."""
     # Cache latest release info to cut down on API calls; keyed by (owner, repo) tuples
     seen_releases: dict[tuple[str, str], Release] = {}
@@ -130,3 +132,12 @@ def format_outdated(outdated: dict[str, list[OutdatedDep]], markdown: bool = Fal
         comps.append("")
 
     return "\n".join(comps)
+
+
+def fetch_local(base_dir: Path) -> WORKFLOW_T:
+    """Parse all `*.yml` files present in the specified base directory."""
+    workflows = {}
+    for yml in base_dir.glob("*.yml", case_sensitive=False):
+        workflows[yml.name] = yml.read_text()
+
+    return workflows
