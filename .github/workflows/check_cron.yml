@@ -34,7 +34,7 @@ jobs:
       run: |
         {
           echo 'RES<<EOF'
-          uv run --no-dev CheckWorkflow -m sco1 py-template
+          uv run --no-dev CheckWorkflow remote -m sco1 py-template
           echo EOF
         } >> "$GITHUB_OUTPUT"
 

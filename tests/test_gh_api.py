@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 
+import pytest
 from packaging.version import Version
 from pytest_mock import MockerFixture
 
@@ -19,6 +20,14 @@ def test_fetch_workflows(mocker: MockerFixture) -> None:
     assert workflows.keys() == {"lint_test.yml", "pypi_release.yml"}
 
 
+def test_fetch_workflows_no_token_raises(mocker: MockerFixture) -> None:
+    mocker.patch("check_workflow.gh_api.TOK", "")
+    mocker.patch("check_workflow.gh_api.CLIENT.execute")  # Shouldn't hit, but block just in case
+
+    with pytest.raises(RuntimeError, match="API token"):
+        fetch_workflows("sco1", "check-workflow")
+
+
 def test_release_from_node() -> None:
     SAMPLE_NODE = {
         "tagName": "v3.1.1",
@@ -33,6 +42,14 @@ def test_release_from_node() -> None:
     )
 
     assert Release.from_node(SAMPLE_NODE) == TRUTH_RELEASE
+
+
+def test_release_query_no_token_raises(mocker: MockerFixture) -> None:
+    mocker.patch("check_workflow.gh_api.TOK", "")
+    mocker.patch("check_workflow.gh_api.CLIENT.execute")  # Shouldn't hit, but block just in case
+
+    with pytest.raises(RuntimeError, match="API token"):
+        fetch_releases("sco1", "check-workflow")
 
 
 def test_release_query_single(mocker: MockerFixture) -> None:

@@ -12,7 +12,7 @@ from gql.transport.httpx import HTTPXTransport
 from httpx import Timeout
 from packaging.version import Version
 
-from check_workflow import __url__, __version__
+from check_workflow import WORKFLOW_T, __url__, __version__
 
 TOK = os.environ.get("PUBLIC_PAT", "")
 
@@ -52,7 +52,7 @@ query GetWorkflows($owner: String!, $repo: String!, $target: String!) {
 
 def fetch_workflows(
     owner: str, repo_name: str, workflow_root: str = ".github/workflows/", branch: str = "main"
-) -> dict[str, str]:
+) -> WORKFLOW_T:
     """
     Fetch all workflow files for the query API using GH's GraphQL API.
 
