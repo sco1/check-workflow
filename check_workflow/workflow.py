@@ -93,6 +93,12 @@ def report_outdated(raw_workflows: dict[str, str]) -> dict[str, list[OutdatedDep
 
 
 def format_outdated(outdated: dict[str, list[OutdatedDep]], markdown: bool = False) -> str:
+    """
+    Prettyprint the provided outdated dependencies into a table.
+
+    If `markdown` is `True`, outdated dependencies are summarized into a markdown-styled table,
+    otherwise the table is output in a terminal friendly form.
+    """
     comps = []
     fields = ["Job", "Step Name", "Action", "Specified", "Latest"]
     for workflow, deps in outdated.items():
