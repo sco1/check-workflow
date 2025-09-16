@@ -15,8 +15,6 @@ from packaging.version import Version
 from check_workflow import __url__, __version__
 
 TOK = os.environ.get("PUBLIC_PAT", "")
-if not TOK:
-    raise RuntimeError("No API token available")
 
 TIMEOUT = Timeout(5, read=15)  # Extend the read timeout a bit, keep the rest at default
 USER_AGENT = (
@@ -60,6 +58,9 @@ def fetch_workflows(
 
     The return is a dictionary of <filename>:<file contents> items.
     """
+    if not TOK:
+        raise RuntimeError("No API token available")
+
     query = gql(WORKFLOW_QUERY)
     query.variable_values = {
         "owner": owner,
@@ -116,6 +117,9 @@ class Release:  # noqa: D101
 
 def fetch_releases(owner: str, repo_name: str, n_latest: int = 1) -> list[Release]:
     """Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API."""
+    if not TOK:
+        raise RuntimeError("No API token available")
+
     query = gql(RELEASE_QUERY)
     query.variable_values = {"owner": owner, "repo": repo_name, "n_latest": n_latest}
 

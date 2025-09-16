@@ -3,6 +3,7 @@ from collections import defaultdict
 
 import yaml
 from packaging.specifiers import SpecifierSet
+from prettytable import PrettyTable, TableStyle
 
 from check_workflow.gh_api import Release, fetch_releases
 
@@ -18,8 +19,8 @@ class UsesSpec(t.NamedTuple):  # noqa: D101
         Build a `UsesSpec` instance from the provided workflow dependency specification.
 
         Dependency specifications are assumed to be of the form `<user>/<repo>@<ver>`, for example:
-            * `actions/setup-python@v6`
-            * `deadsnakes/action@v3.2.0`
+            * `"actions/setup-python@v6"`
+            * `"deadsnakes/action@v3.2.0"`
 
         The resulting instance's `spec` attribute is built using a compatible release clause (`~=`).
         """
@@ -91,19 +92,35 @@ def report_outdated(raw_workflows: dict[str, str]) -> dict[str, list[OutdatedDep
     return outdated
 
 
-def format_outdated(outdated: dict[str, list[OutdatedDep]]) -> str:  # noqa: D103
+def format_outdated(outdated: dict[str, list[OutdatedDep]], markdown: bool = False) -> str:
     comps = []
-    header = "Job, Step Name, Action, Specified, Latest"
+    fields = ["Job", "Step Name", "Action", "Specified", "Latest"]
     for workflow, deps in outdated.items():
-        comps.append(f"Workflow file: {workflow}")
-        comps.append(f"\t{header}")
-        comps.append(f"\t{"="*len(header)}")
+        if markdown:
+            comps.append(f"### `{workflow}`")
+        else:
+            comps.append(f"{workflow}")
+
+        table = PrettyTable()
+        table.field_names = fields
+        table.align = "c"
+
+        if markdown:
+            table.set_style(TableStyle.MARKDOWN)
 
         for dep in deps:
             action_string = f"{dep.spec.uses.owner}/{dep.spec.uses.repo}"
-            comps.append(
-                f"\t{dep.spec.job}, {dep.spec.step_name}, {action_string}, {dep.spec.uses.spec}, {dep.latest.ver}"  # noqa: E501
+            table.add_row(
+                [
+                    dep.spec.job,
+                    dep.spec.step_name,
+                    action_string,
+                    dep.spec.uses.spec,
+                    dep.latest.ver,
+                ]
             )
+
+        comps.append(table.get_string())
         comps.append("")
 
     return "\n".join(comps)
