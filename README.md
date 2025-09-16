@@ -34,7 +34,7 @@ Since this is mainly intended as a personal helper, I do not intend to deploy th
 Alternatively, you can use a tool like `uv` or `pipx` to run or install this project as a standalone tool, e.g.:
 
 ```text
-$ uvx --from git+https://github.com/sco1/check-workflow@v1.0.0 CheckWorkflow --help
+$ uvx --from git+https://github.com/sco1/check-workflow@v1.1.0 CheckWorkflow --help
 usage: CheckWorkflow [-h] {local,remote} ...
 
 positional arguments:
