@@ -66,9 +66,9 @@ $ CheckWorkflow local --help
 usage: CheckWorkflow local [-h] [-r ROOT] [-m]
 
 options:
-  -h, --help            show this help message and exit
-  -r ROOT, --root ROOT  Workflow root (default: ./.github/workflows/)
-  -m, --markdown        Format report as markdown (default: False)
+  -h, --help       show this help message and exit
+  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  -m, --markdown   Format report as markdown (default: False)
 ```
 
 <!-- [[[end]]] -->
@@ -89,15 +89,14 @@ $ CheckWorkflow remote --help
 usage: CheckWorkflow remote [-h] [-b BRANCH] [-r ROOT] [-m] org repo
 
 positional arguments:
-  org                   Query repository parent
-  repo                  Query repository
+  org                  Query repository parent
+  repo                 Query repository
 
 options:
-  -h, --help            show this help message and exit
-  -b BRANCH, --branch BRANCH
-                        Query branch (default: main)
-  -r ROOT, --root ROOT  Workflow root (default: .github/workflows/)
-  -m, --markdown        Format report as markdown (default: False)
+  -h, --help           show this help message and exit
+  -b, --branch BRANCH  Query branch (default: main)
+  -r, --root ROOT      Workflow root (default: .github/workflows/)
+  -m, --markdown       Format report as markdown (default: False)
 ```
 
 <!-- [[[end]]] -->

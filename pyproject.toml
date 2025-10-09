@@ -39,8 +39,8 @@ Changelog = "https://github.com/sco1/check-workflow/blob/main/CHANGELOG.md"
 [project.scripts]
 CheckWorkflow = "check_workflow.cli:main"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black~=25.0",
     "cogapp~=3.5",
     "flake8~=7.1",
