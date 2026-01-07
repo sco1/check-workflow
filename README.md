@@ -8,7 +8,7 @@
 Check GHA For Dependency Updates
 
 ```text
-$ CheckWorkflow sco1 check-workflow
+$ CheckWorkflow remote sco1 check-workflow
 lint_test.yml
 +-------------+-------------------------+---------------------------+-----------+--------+
 |     Job     |        Step Name        |           Action          | Specified | Latest |
