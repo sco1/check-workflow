@@ -70,7 +70,8 @@ def test_extract_dependencies() -> None:
     assert extracted == TRUTH_DEPENDENCIES
 
 
-def test_report_outdated(mocker: MockerFixture) -> None:
+@pytest.mark.asyncio
+async def test_report_outdated(mocker: MockerFixture) -> None:
     LATEST_RELEASES = (
         [Release(ver=Version("5.0"), published=dt.datetime.now(), url="")],  # checkout
         [Release(ver=Version("6.1"), published=dt.datetime.now(), url="")],  # setup-python
@@ -81,9 +82,14 @@ def test_report_outdated(mocker: MockerFixture) -> None:
         "wf.yml": [OutdatedDep(spec=TRUTH_DEPENDENCIES[0], latest=LATEST_RELEASES[0][0])]
     }
 
-    mocker.patch("check_workflow.workflow.fetch_releases", side_effect=LATEST_RELEASES)
+    mock_session = mocker.AsyncMock()
+    mocker.patch(
+        "check_workflow.workflow.fetch_releases",
+        new_callable=mocker.AsyncMock,
+        side_effect=LATEST_RELEASES,
+    )
 
-    outdated = report_outdated(WORKFLOWS)
+    outdated = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS)
     assert outdated == TRUTH_OUTDATED
 
 
@@ -99,13 +105,18 @@ jobs:
 """
 
 
-def test_report_outdated_caches(mocker: MockerFixture) -> None:
+@pytest.mark.asyncio
+async def test_report_outdated_caches(mocker: MockerFixture) -> None:
     WORKFLOWS = {"wf.yml": SAMPLE_WORKFLOW_REPEAT_DEP}
     LATEST = [Release(ver=Version("5.0"), published=dt.datetime.now(), url="")]
-    patched = mocker.patch("check_workflow.workflow.fetch_releases", return_value=LATEST)
 
-    _ = report_outdated(WORKFLOWS)
-    patched.assert_called_once()
+    mock_session = mocker.AsyncMock()
+    patched = mocker.patch(
+        "check_workflow.workflow.fetch_releases", new_callable=mocker.AsyncMock, return_value=LATEST
+    )
+
+    _ = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS)
+    patched.assert_awaited_once()
 
 
 def test_fetch_local(tmp_path: Path) -> None:

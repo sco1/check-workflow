@@ -2,6 +2,16 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.2.0]`
+
+### Changed
+
+* (Internal) Moved network related functionality to asynchronous calls
+
+### Added
+
+* Add support for specifying API key in `.env`
+
 ## `[v1.1.0]`
 
 ### Changed

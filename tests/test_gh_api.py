@@ -9,23 +9,31 @@ from check_workflow.gh_api import Release, fetch_releases, fetch_workflows
 from tests import SAMPLE_DATA_DIR
 
 
-def test_fetch_workflows(mocker: MockerFixture) -> None:
+@pytest.mark.asyncio
+async def test_fetch_workflows(mocker: MockerFixture) -> None:
     SAMPLE_RESPONSE = SAMPLE_DATA_DIR / "workflow_query.json"
     with SAMPLE_RESPONSE.open("r") as f:
         resp = json.load(f)
 
-    mocker.patch("check_workflow.gh_api.CLIENT.execute", return_value=resp)
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = resp
 
-    workflows = fetch_workflows("sco1", "flake8_annotations")
+    workflows = await fetch_workflows(
+        session=mock_session, owner="sco1", repo_name="flake8_annotations"
+    )
     assert workflows.keys() == {"lint_test.yml", "pypi_release.yml"}
 
 
-def test_fetch_workflows_no_token_raises(mocker: MockerFixture) -> None:
+@pytest.mark.asyncio
+async def test_fetch_workflows_no_token_raises(mocker: MockerFixture) -> None:
     mocker.patch("check_workflow.gh_api.TOK", "")
-    mocker.patch("check_workflow.gh_api.CLIENT.execute")  # Shouldn't hit, but block just in case
+
+    # Shouldn't get as far as the network request, but stub it out just in case
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = {}
 
     with pytest.raises(RuntimeError, match="API token"):
-        fetch_workflows("sco1", "check-workflow")
+        await fetch_workflows(session=mock_session, owner="sco1", repo_name="check-workflow")
 
 
 def test_release_from_node() -> None:
@@ -44,20 +52,26 @@ def test_release_from_node() -> None:
     assert Release.from_node(SAMPLE_NODE) == TRUTH_RELEASE
 
 
-def test_release_query_no_token_raises(mocker: MockerFixture) -> None:
+@pytest.mark.asyncio
+async def test_release_query_no_token_raises(mocker: MockerFixture) -> None:
     mocker.patch("check_workflow.gh_api.TOK", "")
-    mocker.patch("check_workflow.gh_api.CLIENT.execute")  # Shouldn't hit, but block just in case
+
+    # Shouldn't get as far as the network request, but stub it out just in case
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = {}
 
     with pytest.raises(RuntimeError, match="API token"):
-        fetch_releases("sco1", "check-workflow")
+        await fetch_releases(session=mock_session, owner="sco1", repo_name="check-workflow")
 
 
-def test_release_query_single(mocker: MockerFixture) -> None:
+@pytest.mark.asyncio
+async def test_release_query_single(mocker: MockerFixture) -> None:
     SAMPLE_RESPONSE = SAMPLE_DATA_DIR / "release_query_single.json"
     with SAMPLE_RESPONSE.open("r") as f:
         resp = json.load(f)
 
-    mocker.patch("check_workflow.gh_api.CLIENT.execute", return_value=resp)
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = resp
 
     TRUTH_OUT = [
         Release(
@@ -67,15 +81,20 @@ def test_release_query_single(mocker: MockerFixture) -> None:
         )
     ]
 
-    assert fetch_releases("sco1", "flake8_annotations") == TRUTH_OUT
+    releases = await fetch_releases(
+        session=mock_session, owner="scor", repo_name="flake8-annotations"
+    )
+    assert releases == TRUTH_OUT
 
 
-def test_release_query_multi(mocker: MockerFixture) -> None:
+@pytest.mark.asyncio
+async def test_release_query_multi(mocker: MockerFixture) -> None:
     SAMPLE_RESPONSE = SAMPLE_DATA_DIR / "release_query_multi.json"
     with SAMPLE_RESPONSE.open("r") as f:
         resp = json.load(f)
 
-    patched = mocker.patch("check_workflow.gh_api.CLIENT.execute", return_value=resp)
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = resp
 
     TRUTH_OUT = [
         Release(
@@ -95,8 +114,10 @@ def test_release_query_multi(mocker: MockerFixture) -> None:
         ),
     ]
 
-    releases = fetch_releases("sco1", "flake8_annotations", n_latest=3)
+    releases = await fetch_releases(
+        session=mock_session, owner="sco1", repo_name="flake8_annotations", n_latest=3
+    )
     assert releases == TRUTH_OUT
 
-    query = patched.call_args.args[0].payload
+    query = mock_session.execute.call_args.args[0].payload
     assert query["variables"]["n_latest"] == 3

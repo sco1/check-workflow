@@ -3,6 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import yaml
+from gql.client import AsyncClientSession
 from packaging.specifiers import SpecifierSet
 from prettytable import PrettyTable, TableStyle
 
@@ -72,7 +73,9 @@ class OutdatedDep(t.NamedTuple):  # noqa: D101
     latest: Release
 
 
-def report_outdated(raw_workflows: WORKFLOW_T) -> dict[str, list[OutdatedDep]]:
+async def report_outdated(
+    session: AsyncClientSession, raw_workflows: WORKFLOW_T
+) -> dict[str, list[OutdatedDep]]:
     """Parse the provided workflow files and return a per-file list of outdated dependencies."""
     # Cache latest release info to cut down on API calls; keyed by (owner, repo) tuples
     seen_releases: dict[tuple[str, str], Release] = {}
@@ -83,7 +86,11 @@ def report_outdated(raw_workflows: WORKFLOW_T) -> dict[str, list[OutdatedDep]]:
         for dep in wf_deps:
             cache_key = (dep.uses.owner, dep.uses.repo)
             if cache_key not in seen_releases:
-                latest = fetch_releases(owner=dep.uses.owner, repo_name=dep.uses.repo)[0]
+                latest = (
+                    await fetch_releases(
+                        session=session, owner=dep.uses.owner, repo_name=dep.uses.repo
+                    )
+                )[0]
                 seen_releases[cache_key] = latest
             else:
                 latest = seen_releases[cache_key]

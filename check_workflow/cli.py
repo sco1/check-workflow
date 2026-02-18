@@ -1,21 +1,34 @@
 import argparse
+import asyncio
 from pathlib import Path
 
-from check_workflow.gh_api import fetch_workflows
+from check_workflow.gh_api import CLIENT, fetch_workflows
 from check_workflow.workflow import fetch_local, format_outdated, report_outdated
 
 
-def _remote_report_pipeline(org: str, repo: str, root: str, branch: str, markdown: bool) -> None:
-    workflows = fetch_workflows(owner=org, repo_name=repo, workflow_root=root, branch=branch)
-    outdated = report_outdated(workflows)
+async def _remote_report_pipeline(
+    org: str, repo: str, root: str, branch: str, markdown: bool
+) -> None:
+    async with CLIENT as session:
+        workflows = await fetch_workflows(
+            session=session,
+            owner=org,
+            repo_name=repo,
+            workflow_root=root,
+            branch=branch,
+        )
+
+        outdated = await report_outdated(session, workflows)
 
     if outdated:
         print(format_outdated(outdated, markdown=markdown))
 
 
-def _local_report_pipeline(root: Path, markdown: bool) -> None:
+async def _local_report_pipeline(root: Path, markdown: bool) -> None:
     workflows = fetch_local(root)
-    outdated = report_outdated(workflows)
+
+    async with CLIENT as session:
+        outdated = await report_outdated(session, workflows)
 
     if outdated:
         print(format_outdated(outdated, markdown=markdown))
@@ -54,14 +67,16 @@ def main() -> None:  # noqa: D103
 
     args = parser.parse_args()
     if args.subcommand == "local":
-        _local_report_pipeline(root=args.root, markdown=args.markdown)
+        asyncio.run(_local_report_pipeline(root=args.root, markdown=args.markdown))
     else:
-        _remote_report_pipeline(
-            org=args.org,
-            repo=args.repo,
-            root=args.root,
-            branch=args.branch,
-            markdown=args.markdown,
+        asyncio.run(
+            _remote_report_pipeline(
+                org=args.org,
+                repo=args.repo,
+                root=args.root,
+                branch=args.branch,
+                markdown=args.markdown,
+            )
         )
 
 
