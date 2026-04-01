@@ -17,6 +17,9 @@ async def _remote_report_pipeline(
             workflow_root=root,
             branch=branch,
         )
+        if not workflows:
+            print(f"No workflows found at the provided root: {root}")
+            return
 
         outdated = await report_outdated(session, workflows)
 
@@ -26,6 +29,9 @@ async def _remote_report_pipeline(
 
 async def _local_report_pipeline(root: Path, markdown: bool) -> None:
     workflows = fetch_local(root)
+    if not workflows:
+        print(f"No workflows found at the provided root: {root}")
+        return
 
     async with CLIENT as session:
         outdated = await report_outdated(session, workflows)
