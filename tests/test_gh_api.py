@@ -41,12 +41,14 @@ def test_release_from_node() -> None:
         "tagName": "v3.1.1",
         "publishedAt": "2024-05-17T14:07:20Z",
         "url": "https://github.com/sco1/flake8-annotations/releases/tag/v3.1.1",
+        "tagCommit": {"oid": "d27be86996bb75bf0867eb24fe710cdb39ec5188"},
     }
 
     TRUTH_RELEASE = Release(
         ver=Version("3.1.1"),
         published=dt.datetime.fromisoformat("2024-05-17T14:07:20Z"),
         url="https://github.com/sco1/flake8-annotations/releases/tag/v3.1.1",
+        tag_hash="d27be86996bb75bf0867eb24fe710cdb39ec5188",
     )
 
     assert Release.from_node(SAMPLE_NODE) == TRUTH_RELEASE
@@ -78,6 +80,7 @@ async def test_release_query_single(mocker: MockerFixture) -> None:
             ver=Version("3.1.1"),
             published=dt.datetime.fromisoformat("2024-05-17T14:07:20Z"),
             url="https://github.com/sco1/flake8-annotations/releases/tag/v3.1.1",
+            tag_hash="d27be86996bb75bf0867eb24fe710cdb39ec5188",
         )
     ]
 
@@ -101,16 +104,19 @@ async def test_release_query_multi(mocker: MockerFixture) -> None:
             ver=Version("3.1.1"),
             published=dt.datetime.fromisoformat("2024-05-17T14:07:20Z"),
             url="https://github.com/sco1/flake8-annotations/releases/tag/v3.1.1",
+            tag_hash="d27be86996bb75bf0867eb24fe710cdb39ec5188",
         ),
         Release(
             ver=Version("3.1.0"),
             published=dt.datetime.fromisoformat("2024-05-06T18:47:23Z"),
             url="https://github.com/sco1/flake8-annotations/releases/tag/v3.1.0",
+            tag_hash="ec8b88b35613b5274148a87decf2dfbecec1df31",
         ),
         Release(
             ver=Version("3.0.1"),
             published=dt.datetime.fromisoformat("2023-05-03T02:43:51Z"),
             url="https://github.com/sco1/flake8-annotations/releases/tag/v3.0.1",
+            tag_hash="d831807bedbda4b084b184032daa9262705f2b71",
         ),
     ]
 

@@ -91,6 +91,7 @@ query GetLatestReleases($owner: String!, $repo: String!, $n_latest: Int!) {
                 tagName
                 publishedAt
                 url
+                tagCommit { oid }
             }
         }
     }
@@ -103,6 +104,7 @@ class Release:  # noqa: D101
     ver: Version
     published: dt.datetime
     url: str
+    tag_hash: str
 
     @classmethod
     def from_node(cls, node: dict) -> t.Self:
@@ -113,12 +115,14 @@ class Release:  # noqa: D101
             * `"tagName"`
             * `"publishedAt"`
             * `"url"`
+            * `"tagCommit"` - nested dict with `"oid"` key
         """
         raw_ver = node["tagName"].removeprefix("v")
         return cls(
             ver=Version(raw_ver),
             published=dt.datetime.fromisoformat(node["publishedAt"]),
             url=node["url"],
+            tag_hash=node["tagCommit"]["oid"],
         )
 
 
