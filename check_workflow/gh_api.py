@@ -131,7 +131,7 @@ async def fetch_releases(
     session: AsyncClientSession,
     owner: str,
     repo_name: str,
-    n_latest: int = 1,
+    n_latest: int = 5,
 ) -> list[Release]:
     """
     Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API.

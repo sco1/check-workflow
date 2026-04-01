@@ -2,6 +2,16 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.2.1]`
+
+### Added
+
+* #17 Provide feedback in the terminal if no workflows are discovered at the given root
+
+### Fixed
+
+* #18 Sort results of release query by version number instead of release date
+
 ## `[v1.2.0]`
 
 ### Changed
