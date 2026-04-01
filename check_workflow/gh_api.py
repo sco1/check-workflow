@@ -1,4 +1,5 @@
 import datetime as dt
+import operator
 import os
 import platform
 import typing as t
@@ -132,7 +133,11 @@ async def fetch_releases(
     repo_name: str,
     n_latest: int = 1,
 ) -> list[Release]:
-    """Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API."""
+    """
+    Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API.
+
+    NOTE: Releases are sorted in version order, descending.
+    """
     if not TOK:
         raise RuntimeError("No API token available")
 
@@ -144,4 +149,5 @@ async def fetch_releases(
     for r in result["repository"]["releases"]["nodes"]:
         releases.append(Release.from_node(r))
 
+    releases.sort(key=operator.attrgetter("ver"), reverse=True)
     return releases

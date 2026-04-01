@@ -127,3 +127,42 @@ async def test_release_query_multi(mocker: MockerFixture) -> None:
 
     query = mock_session.execute.call_args.args[0].payload
     assert query["variables"]["n_latest"] == 3
+
+
+@pytest.mark.asyncio
+async def test_release_query_multi_sorted(mocker: MockerFixture) -> None:
+    SAMPLE_RESPONSE = SAMPLE_DATA_DIR / "release_query_multi_unsorted.json"
+    with SAMPLE_RESPONSE.open("r") as f:
+        resp = json.load(f)
+
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = resp
+
+    TRUTH_OUT = [
+        Release(
+            ver=Version("3.1.0"),
+            published=dt.datetime.fromisoformat("2024-05-06T18:47:23Z"),
+            url="https://github.com/sco1/flake8-annotations/releases/tag/v3.1.0",
+            tag_hash="abc456",
+        ),
+        Release(
+            ver=Version("3.0.1"),
+            published=dt.datetime.fromisoformat("2023-05-03T02:43:51Z"),
+            url="https://github.com/sco1/flake8-annotations/releases/tag/v3.0.1",
+            tag_hash="abc789",
+        ),
+        Release(
+            ver=Version("2.1.2"),
+            published=dt.datetime.fromisoformat("2024-05-17T14:07:20Z"),
+            url="https://github.com/sco1/flake8-annotations/releases/tag/v2.1.2",
+            tag_hash="abc123",
+        ),
+    ]
+
+    releases = await fetch_releases(
+        session=mock_session, owner="sco1", repo_name="flake8_annotations", n_latest=3
+    )
+    assert releases == TRUTH_OUT
+
+    query = mock_session.execute.call_args.args[0].payload
+    assert query["variables"]["n_latest"] == 3
