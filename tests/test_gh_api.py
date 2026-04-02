@@ -166,3 +166,20 @@ async def test_release_query_multi_sorted(mocker: MockerFixture) -> None:
 
     query = mock_session.execute.call_args.args[0].payload
     assert query["variables"]["n_latest"] == 3
+
+
+@pytest.mark.asyncio
+async def test_release_query_skip_bad_tag(mocker: MockerFixture) -> None:
+    SAMPLE_RESPONSE = SAMPLE_DATA_DIR / "release_query_single_bad_tag.json"
+    with SAMPLE_RESPONSE.open("r") as f:
+        resp = json.load(f)
+
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = resp
+
+    TRUTH_OUT: list[Release] = []
+
+    releases = await fetch_releases(
+        session=mock_session, owner="sco1", repo_name="flake8_annotations", n_latest=3
+    )
+    assert releases == TRUTH_OUT

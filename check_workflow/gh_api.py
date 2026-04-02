@@ -13,7 +13,7 @@ from gql import gql
 from gql.client import AsyncClientSession
 from gql.transport.httpx import HTTPXAsyncTransport
 from httpx import Timeout
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 
 from check_workflow import WORKFLOW_T, __url__, __version__
 
@@ -137,6 +137,8 @@ async def fetch_releases(
     Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API.
 
     NOTE: Releases are sorted in version order, descending.
+
+    NOTE: If a release's tag cannot be parsed by `packaging.version` it is skipped.
     """
     if not TOK:
         raise RuntimeError("No API token available")
@@ -147,7 +149,10 @@ async def fetch_releases(
     releases = []
     result = await session.execute(query)
     for r in result["repository"]["releases"]["nodes"]:
-        releases.append(Release.from_node(r))
+        try:
+            releases.append(Release.from_node(r))
+        except InvalidVersion:
+            print(f"Could not parse version '{r["tagName"]}', skipping...")
 
     releases.sort(key=operator.attrgetter("ver"), reverse=True)
     return releases
