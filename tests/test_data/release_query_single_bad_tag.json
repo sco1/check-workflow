@@ -1,0 +1,14 @@
+{
+    "repository": {
+        "releases": {
+            "nodes": [
+                {
+                    "tagName": "v3.1.1-node20",
+                    "publishedAt": "2024-05-17T14:07:20Z",
+                    "url": "https://abc.def",
+                    "tagCommit": {"oid": "abc123"}
+                }
+            ]
+        }
+    }
+}

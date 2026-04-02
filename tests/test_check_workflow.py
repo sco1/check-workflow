@@ -73,9 +73,9 @@ def test_extract_dependencies() -> None:
 @pytest.mark.asyncio
 async def test_report_outdated(mocker: MockerFixture) -> None:
     LATEST_RELEASES = (
-        [Release(ver=Version("5.0"), published=dt.datetime.now(), url="")],  # checkout
-        [Release(ver=Version("6.1"), published=dt.datetime.now(), url="")],  # setup-python
-        [Release(ver=Version("3.2.0"), published=dt.datetime.now(), url="")],  # deadsnakes
+        [Release(ver=Version("5.0"), published=dt.datetime.now(), url="", tag_hash="")],
+        [Release(ver=Version("6.1"), published=dt.datetime.now(), url="", tag_hash="")],
+        [Release(ver=Version("3.2.0"), published=dt.datetime.now(), url="", tag_hash="")],
     )
     WORKFLOWS = {"wf.yml": SAMPLE_WORKFLOW}
     TRUTH_OUTDATED = {
@@ -108,7 +108,7 @@ jobs:
 @pytest.mark.asyncio
 async def test_report_outdated_caches(mocker: MockerFixture) -> None:
     WORKFLOWS = {"wf.yml": SAMPLE_WORKFLOW_REPEAT_DEP}
-    LATEST = [Release(ver=Version("5.0"), published=dt.datetime.now(), url="")]
+    LATEST = [Release(ver=Version("5.0"), published=dt.datetime.now(), url="", tag_hash="")]
 
     mock_session = mocker.AsyncMock()
     patched = mocker.patch(

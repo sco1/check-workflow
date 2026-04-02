@@ -1,4 +1,5 @@
 import datetime as dt
+import operator
 import os
 import platform
 import typing as t
@@ -12,7 +13,7 @@ from gql import gql
 from gql.client import AsyncClientSession
 from gql.transport.httpx import HTTPXAsyncTransport
 from httpx import Timeout
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 
 from check_workflow import WORKFLOW_T, __url__, __version__
 
@@ -91,6 +92,7 @@ query GetLatestReleases($owner: String!, $repo: String!, $n_latest: Int!) {
                 tagName
                 publishedAt
                 url
+                tagCommit { oid }
             }
         }
     }
@@ -103,6 +105,7 @@ class Release:  # noqa: D101
     ver: Version
     published: dt.datetime
     url: str
+    tag_hash: str
 
     @classmethod
     def from_node(cls, node: dict) -> t.Self:
@@ -113,12 +116,14 @@ class Release:  # noqa: D101
             * `"tagName"`
             * `"publishedAt"`
             * `"url"`
+            * `"tagCommit"` - nested dict with `"oid"` key
         """
         raw_ver = node["tagName"].removeprefix("v")
         return cls(
             ver=Version(raw_ver),
             published=dt.datetime.fromisoformat(node["publishedAt"]),
             url=node["url"],
+            tag_hash=node["tagCommit"]["oid"],
         )
 
 
@@ -126,9 +131,15 @@ async def fetch_releases(
     session: AsyncClientSession,
     owner: str,
     repo_name: str,
-    n_latest: int = 1,
+    n_latest: int = 5,
 ) -> list[Release]:
-    """Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API."""
+    """
+    Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API.
+
+    NOTE: Releases are sorted in version order, descending.
+
+    NOTE: If a release's tag cannot be parsed by `packaging.version` it is skipped.
+    """
     if not TOK:
         raise RuntimeError("No API token available")
 
@@ -138,6 +149,10 @@ async def fetch_releases(
     releases = []
     result = await session.execute(query)
     for r in result["repository"]["releases"]["nodes"]:
-        releases.append(Release.from_node(r))
+        try:
+            releases.append(Release.from_node(r))
+        except InvalidVersion:
+            print(f"Could not parse version '{r["tagName"]}', skipping...")
 
+    releases.sort(key=operator.attrgetter("ver"), reverse=True)
     return releases

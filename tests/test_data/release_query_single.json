@@ -5,7 +5,8 @@
                 {
                     "tagName": "v3.1.1",
                     "publishedAt": "2024-05-17T14:07:20Z",
-                    "url": "https://github.com/sco1/flake8-annotations/releases/tag/v3.1.1"
+                    "url": "https://github.com/sco1/flake8-annotations/releases/tag/v3.1.1",
+                    "tagCommit": {"oid": "d27be86996bb75bf0867eb24fe710cdb39ec5188"}
                 }
             ]
         }
