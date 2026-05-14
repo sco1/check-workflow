@@ -19,11 +19,20 @@ from check_workflow.workflow import (
 SPEC_FROM_RAW_TEST_CASES = (
     (
         "actions/setup-python@v6",
-        UsesSpec(owner="actions", repo="setup-python", spec=SpecifierSet("~=6.0")),
+        UsesSpec(owner="actions", repo="setup-python", spec=SpecifierSet("~=6.0"), sha=None),
     ),
     (
         "deadsnakes/action@v3.2.0",
-        UsesSpec(owner="deadsnakes", repo="action", spec=SpecifierSet("~=3.2.0")),
+        UsesSpec(owner="deadsnakes", repo="action", spec=SpecifierSet("~=3.2.0"), sha=None),
+    ),
+    (
+        "actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3",
+        UsesSpec(
+            owner="actions",
+            repo="checkout",
+            spec=None,
+            sha="8f4b7f84864484a7bf31766abe9204da3cbe65b3",
+        ),
     ),
 )
 
@@ -46,6 +55,9 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-extras --dev
 
+    - name: Step with SHA
+      uses: ooga/booga@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
   test:
     steps:
     - name: Set up deadsnakes
@@ -56,6 +68,11 @@ TRUTH_DEPENDENCIES = [
     JobDependency(job="lint", step_name=None, uses=UsesSpec.from_raw("actions/checkout@v4")),
     JobDependency(
         job="lint", step_name="Set up Python", uses=UsesSpec.from_raw("actions/setup-python@v6")
+    ),
+    JobDependency(
+        job="lint",
+        step_name="Step with SHA",
+        uses=UsesSpec.from_raw("ooga/booga@8f4b7f84864484a7bf31766abe9204da3cbe65b3"),
     ),
     JobDependency(
         job="test",
@@ -70,16 +87,82 @@ def test_extract_dependencies() -> None:
     assert extracted == TRUTH_DEPENDENCIES
 
 
+SAMPLE_WORKFLOW_USES_RELATIVE = """\
+jobs:
+  jobby_job:
+    steps:
+      - name: Use local
+        uses: ./.github/actions/local
+      - name: Use parent local
+        uses: ../.other/actions/local
+"""
+
+
+def test_extract_dependencies_skip_relative() -> None:
+    extracted = extract_workflow_dependencies(SAMPLE_WORKFLOW_USES_RELATIVE)
+    assert not extracted
+
+
+SAMPLE_WORKFLOW_USES_DOCKER = """\
+jobs:
+  jobby_job:
+    steps:
+      - name: Docker step
+        uses: docker://alpine:3.8
+"""
+
+
+def test_extract_dependencies_skip_docker() -> None:
+    extracted = extract_workflow_dependencies(SAMPLE_WORKFLOW_USES_DOCKER)
+    assert not extracted
+
+
 @pytest.mark.asyncio
-async def test_report_outdated(mocker: MockerFixture) -> None:
+async def test_report_outdated_by_version(mocker: MockerFixture) -> None:
+    # Latest release for each dependency, in order.
+    # For this test only actions/checkout is outdated
     LATEST_RELEASES = (
-        [Release(ver=Version("5.0"), published=dt.datetime.now(), url="", tag_hash="")],
+        [Release(ver=Version("5.0"), published=dt.datetime.now(), url="", tag_hash="")],  # outdated
         [Release(ver=Version("6.1"), published=dt.datetime.now(), url="", tag_hash="")],
+        [
+            Release(
+                ver=Version("1.0"),
+                published=dt.datetime.now(),
+                url="",
+                tag_hash="8f4b7f84864484a7bf31766abe9204da3cbe65b3",
+            )
+        ],
         [Release(ver=Version("3.2.0"), published=dt.datetime.now(), url="", tag_hash="")],
     )
     WORKFLOWS = {"wf.yml": SAMPLE_WORKFLOW}
     TRUTH_OUTDATED = {
         "wf.yml": [OutdatedDep(spec=TRUTH_DEPENDENCIES[0], latest=LATEST_RELEASES[0][0])]
+    }
+
+    mock_session = mocker.AsyncMock()
+    mocker.patch(
+        "check_workflow.workflow.fetch_releases",
+        new_callable=mocker.AsyncMock,
+        side_effect=LATEST_RELEASES,
+    )
+
+    outdated = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS)
+    assert outdated == TRUTH_OUTDATED
+
+
+@pytest.mark.asyncio
+async def test_report_outdated_by_sha(mocker: MockerFixture) -> None:
+    # Latest release for each dependency, in order.
+    # For this test only ooga/booga is outdated
+    LATEST_RELEASES = (
+        [Release(ver=Version("4.0"), published=dt.datetime.now(), url="", tag_hash="")],
+        [Release(ver=Version("6.1"), published=dt.datetime.now(), url="", tag_hash="")],
+        [Release(ver=Version("1.0"), published=dt.datetime.now(), url="", tag_hash="abc123")],
+        [Release(ver=Version("3.2.0"), published=dt.datetime.now(), url="", tag_hash="")],
+    )
+    WORKFLOWS = {"wf.yml": SAMPLE_WORKFLOW}
+    TRUTH_OUTDATED = {
+        "wf.yml": [OutdatedDep(spec=TRUTH_DEPENDENCIES[2], latest=LATEST_RELEASES[2][0])]
     }
 
     mock_session = mocker.AsyncMock()

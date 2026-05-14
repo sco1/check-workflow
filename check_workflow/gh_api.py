@@ -152,7 +152,7 @@ async def fetch_releases(
         try:
             releases.append(Release.from_node(r))
         except InvalidVersion:
-            print(f"Could not parse version '{r["tagName"]}', skipping...")
+            print(f"{owner}/{repo_name}: Could not parse version '{r["tagName"]}', skipping...")
 
     releases.sort(key=operator.attrgetter("ver"), reverse=True)
     return releases
