@@ -71,9 +71,25 @@ def main() -> None:  # noqa: D103
         "-m", "--markdown", action="store_true", help="Format report as markdown"
     )
 
+    # Dependency bumper
+    bump_sub = subparsers.add_parser(
+        "bump",
+        help="Bump local workflow dependencies",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    bump_sub.add_argument(
+        "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
+    )
+    bump_sub.add_argument("--sha", action="store_true", help="Pin to SHA")
+    bump_sub.add_argument(
+        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
+    )
+
     args = parser.parse_args()
     if args.subcommand == "local":
         asyncio.run(_local_report_pipeline(root=args.root, markdown=args.markdown))
+    elif args.subcommand == "bump":
+        raise NotImplementedError
     else:
         asyncio.run(
             _remote_report_pipeline(
