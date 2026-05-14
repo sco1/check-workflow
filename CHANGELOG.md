@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.3.0]`
+
+### Added
+
+* #15 Add support for SHA pinning
+
 ## `[v1.2.1]`
 
 ### Added
