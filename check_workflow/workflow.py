@@ -3,10 +3,10 @@ import typing as t
 from collections import defaultdict
 from pathlib import Path
 
-import yaml
 from gql.client import AsyncClientSession
 from packaging.specifiers import SpecifierSet
 from prettytable import PrettyTable, TableStyle
+from ruamel.yaml import YAML
 
 from check_workflow import WORKFLOW_T
 from check_workflow.gh_api import Release, fetch_releases
@@ -67,7 +67,8 @@ def extract_workflow_dependencies(raw_workflow: str) -> list[JobDependency]:
     NOTE: Only versioned actions are considered. Other specifications, such as local or docker
     actions, are skipped.
     """
-    loaded = yaml.safe_load(raw_workflow)
+    yaml_parser = YAML(typ="safe")
+    loaded = yaml_parser.load(raw_workflow)
 
     extracted_dependencies = []
     for job, job_params in loaded["jobs"].items():

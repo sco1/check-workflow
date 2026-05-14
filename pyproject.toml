@@ -27,7 +27,7 @@ dependencies = [
     "packaging>=25.0",
     "prettytable~=3.16",
     "python-dotenv~=1.2",
-    "pyyaml~=6.0",
+    "ruamel.yaml~=0.19",
 ]
 
 [project.urls]
@@ -60,7 +60,6 @@ dev = [
     "sco1-bumper~=2.0",
     "tox~=4.23",
     "tox-uv~=1.17",
-    "types-pyyaml~=6.0",
 ]
 
 [tool.black]

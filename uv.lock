@@ -143,7 +143,7 @@ dependencies = [
     { name = "packaging" },
     { name = "prettytable" },
     { name = "python-dotenv" },
-    { name = "pyyaml" },
+    { name = "ruamel-yaml" },
 ]
 
 [package.dev-dependencies]
@@ -166,7 +166,6 @@ dev = [
     { name = "sco1-bumper" },
     { name = "tox" },
     { name = "tox-uv" },
-    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -175,7 +174,7 @@ requires-dist = [
     { name = "packaging", specifier = ">=25.0" },
     { name = "prettytable", specifier = "~=3.16" },
     { name = "python-dotenv", specifier = "~=1.2" },
-    { name = "pyyaml", specifier = "~=6.0" },
+    { name = "ruamel-yaml", specifier = "~=0.19" },
 ]
 
 [package.metadata.requires-dev]
@@ -198,7 +197,6 @@ dev = [
     { name = "sco1-bumper", specifier = "~=2.0" },
     { name = "tox", specifier = "~=4.23" },
     { name = "tox-uv", specifier = "~=1.17" },
-    { name = "types-pyyaml", specifier = "~=6.0" },
 ]
 
 [[package]]
@@ -1099,6 +1097,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ruamel-yaml"
+version = "0.19.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/3b/ebda527b56beb90cb7652cb1c7e4f91f48649fbcd8d2eb2fb6e77cd3329b/ruamel_yaml-0.19.1.tar.gz", hash = "sha256:53eb66cd27849eff968ebf8f0bf61f46cdac2da1d1f3576dd4ccee9b25c31993", size = 142709, upload-time = "2026-01-02T16:50:31.84Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/0c/51f6841f1d84f404f92463fc2b1ba0da357ca1e3db6b7fbda26956c3b82a/ruamel_yaml-0.19.1-py3-none-any.whl", hash = "sha256:27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93", size = 118102, upload-time = "2026-01-02T16:50:29.201Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.15.13"
 source = { registry = "https://pypi.org/simple" }
@@ -1228,15 +1235,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e4/51/9aed62104cea109b820bbd6c14245af756112017d309da813ef107d42e7e/typer-0.25.1.tar.gz", hash = "sha256:9616eb8853a09ffeabab1698952f33c6f29ffdbceb4eaeecf571880e8d7664cc", size = 122276, upload-time = "2026-04-30T19:32:16.964Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3f/f9/2b3ff4e56e5fa7debfaf9eb135d0da96f3e9a1d5b27222223c7296336e5f/typer-0.25.1-py3-none-any.whl", hash = "sha256:75caa44ed46a03fb2dab8808753ffacdbfea88495e74c85a28c5eefcf5f39c89", size = 58409, upload-time = "2026-04-30T19:32:18.271Z" },
-]
-
-[[package]]
-name = "types-pyyaml"
-version = "6.0.12.20260510"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/36/85/0d9fafce21be112e977a89677f1ce9d1aef921d745b17c758c93e861c11f/types_pyyaml-6.0.12.20260510.tar.gz", hash = "sha256:09c1f1cb65a6eebea1e2e51ccf4918b8288e152909609a35cdb0d805efd125ad", size = 17831, upload-time = "2026-05-10T05:26:28.136Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/ad/fd618a218925daada7b8a5e7326e662599fa5fdff4a4c44ab2795bd2d9ca/types_pyyaml-6.0.12.20260510-py3-none-any.whl", hash = "sha256:3492eb9ba4d9d833473214c4d5736cccf5f37d93f5854059721e1c84f785309d", size = 20304, upload-time = "2026-05-10T05:26:26.981Z" },
 ]
 
 [[package]]
