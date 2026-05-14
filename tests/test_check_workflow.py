@@ -87,6 +87,36 @@ def test_extract_dependencies() -> None:
     assert extracted == TRUTH_DEPENDENCIES
 
 
+SAMPLE_WORKFLOW_USES_RELATIVE = """\
+jobs:
+  jobby_job:
+    steps:
+      - name: Use local
+        uses: ./.github/actions/local
+      - name: Use parent local
+        uses: ../.other/actions/local
+"""
+
+
+def test_extract_dependencies_skip_relative() -> None:
+    extracted = extract_workflow_dependencies(SAMPLE_WORKFLOW_USES_RELATIVE)
+    assert not extracted
+
+
+SAMPLE_WORKFLOW_USES_DOCKER = """\
+jobs:
+  jobby_job:
+    steps:
+      - name: Docker step
+        uses: docker://alpine:3.8
+"""
+
+
+def test_extract_dependencies_skip_docker() -> None:
+    extracted = extract_workflow_dependencies(SAMPLE_WORKFLOW_USES_DOCKER)
+    assert not extracted
+
+
 @pytest.mark.asyncio
 async def test_report_outdated_by_version(mocker: MockerFixture) -> None:
     # Latest release for each dependency, in order.

@@ -61,7 +61,12 @@ class JobDependency(t.NamedTuple):  # noqa: D101
 
 
 def extract_workflow_dependencies(raw_workflow: str) -> list[JobDependency]:
-    """Extract job dependencies from the provided raw workflow YAML."""
+    """
+    Extract job dependencies from the provided raw workflow YAML.
+
+    NOTE: Only versioned actions are considered. Other specifications, such as local or docker
+    actions, are skipped.
+    """
     loaded = yaml.safe_load(raw_workflow)
 
     extracted_dependencies = []
@@ -69,14 +74,21 @@ def extract_workflow_dependencies(raw_workflow: str) -> list[JobDependency]:
         for step in job_params["steps"]:
             uses = step.get("uses", None)
 
-            if uses:
-                extracted_dependencies.append(
-                    JobDependency(
-                        job=job,
-                        step_name=step.get("name", None),
-                        uses=UsesSpec.from_raw(uses),
-                    )
+            if uses is None:
+                continue
+
+            if uses.startswith("docker"):
+                continue
+            elif uses.startswith("./") or uses.startswith("../"):
+                continue
+
+            extracted_dependencies.append(
+                JobDependency(
+                    job=job,
+                    step_name=step.get("name", None),
+                    uses=UsesSpec.from_raw(uses),
                 )
+            )
 
     return extracted_dependencies
 

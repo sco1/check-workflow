@@ -8,6 +8,10 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<ma
 
 * #15 Add support for SHA pinning
 
+### Changed
+
+* Explicitly ignore local & docker action dependencies.
+
 ## `[v1.2.1]`
 
 ### Added
