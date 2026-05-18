@@ -1,3 +1,4 @@
+import datetime as dt
 import string
 import typing as t
 from collections import defaultdict
@@ -100,7 +101,9 @@ class OutdatedDep(t.NamedTuple):  # noqa: D101
 
 
 async def report_outdated(
-    session: AsyncClientSession, raw_workflows: WORKFLOW_T
+    session: AsyncClientSession,
+    raw_workflows: WORKFLOW_T,
+    cooldown: dt.timedelta | None,
 ) -> dict[str, list[OutdatedDep]]:
     """Parse the provided workflow files and return a per-file list of outdated dependencies."""
     # Cache latest release info to cut down on API calls; keyed by (owner, repo) tuples
@@ -114,7 +117,10 @@ async def report_outdated(
             if cache_key not in seen_releases:
                 latest = (
                     await fetch_releases(
-                        session=session, owner=dep.uses.owner, repo_name=dep.uses.repo
+                        session=session,
+                        owner=dep.uses.owner,
+                        repo_name=dep.uses.repo,
+                        cooldown=cooldown,
                     )
                 )[0]
                 seen_releases[cache_key] = latest

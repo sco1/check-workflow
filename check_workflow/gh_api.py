@@ -2,6 +2,7 @@ import datetime as dt
 import operator
 import os
 import platform
+import re
 import typing as t
 from dataclasses import dataclass
 
@@ -127,14 +128,34 @@ class Release:  # noqa: D101
         )
 
 
+PND_RE = re.compile(r"P(\d+)D$")
+
+
+def parse_cooldown(cooldown_spec: str) -> dt.timedelta:
+    """
+    Parse cooldown string, as `PnD`, into its equivalent timedelta.
+
+    See: https://en.wikipedia.org/wiki/ISO_8601#Durations
+    """
+    scan = PND_RE.match(cooldown_spec)
+    if not scan:
+        raise ValueError(f"Unrecognized cooldown specified: '{cooldown_spec}'. Please use 'PnD'.")
+
+    return dt.timedelta(days=int(scan.group(1)))
+
+
 async def fetch_releases(
     session: AsyncClientSession,
     owner: str,
     repo_name: str,
     n_latest: int = 5,
+    cooldown: dt.timedelta | None = None,
 ) -> list[Release]:
     """
     Fetch the `n_latest` most recent releases from the query repo using GH's GraphQL API.
+
+    If `cooldown` is specified, releases that are not older than the specified `timedelta` are
+    skipped.
 
     NOTE: Releases are sorted in version order, descending.
 
@@ -150,9 +171,21 @@ async def fetch_releases(
     result = await session.execute(query)
     for r in result["repository"]["releases"]["nodes"]:
         try:
-            releases.append(Release.from_node(r))
+            rel = Release.from_node(r)
         except InvalidVersion:
             print(f"{owner}/{repo_name}: Could not parse version '{r["tagName"]}', skipping...")
+            continue
+
+        if cooldown is None:
+            releases.append(rel)
+        else:
+            age = dt.datetime.now(dt.timezone.utc) - rel.published
+            if age >= cooldown:
+                releases.append(rel)
+            else:
+                print(
+                    f"{owner}/{repo_name}: Release '{r["tagName"]}' does not meet cooldown, skipping..."  # noqa: E501
+                )
 
     releases.sort(key=operator.attrgetter("ver"), reverse=True)
     return releases

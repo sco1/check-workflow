@@ -1,13 +1,14 @@
 import argparse
 import asyncio
+import datetime as dt
 from pathlib import Path
 
-from check_workflow.gh_api import CLIENT, fetch_workflows
+from check_workflow.gh_api import CLIENT, fetch_workflows, parse_cooldown
 from check_workflow.workflow import fetch_local, format_outdated, report_outdated
 
 
 async def _remote_report_pipeline(
-    org: str, repo: str, root: str, branch: str, markdown: bool
+    org: str, repo: str, root: str, branch: str, cooldown: dt.timedelta | None, markdown: bool
 ) -> None:
     async with CLIENT as session:
         workflows = await fetch_workflows(
@@ -21,20 +22,20 @@ async def _remote_report_pipeline(
             print(f"No workflows found at the provided root: {root}")
             return
 
-        outdated = await report_outdated(session, workflows)
+        outdated = await report_outdated(session, workflows, cooldown)
 
     if outdated:
         print(format_outdated(outdated, markdown=markdown))
 
 
-async def _local_report_pipeline(root: Path, markdown: bool) -> None:
+async def _local_report_pipeline(root: Path, cooldown: dt.timedelta | None, markdown: bool) -> None:
     workflows = fetch_local(root)
     if not workflows:
         print(f"No workflows found at the provided root: {root}")
         return
 
     async with CLIENT as session:
-        outdated = await report_outdated(session, workflows)
+        outdated = await report_outdated(session, workflows, cooldown)
 
     if outdated:
         print(format_outdated(outdated, markdown=markdown))
@@ -52,6 +53,9 @@ def main() -> None:  # noqa: D103
         "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
     )
     local_sub.add_argument(
+        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
+    )
+    local_sub.add_argument(
         "-m", "--markdown", action="store_true", help="Format report as markdown"
     )
 
@@ -66,6 +70,9 @@ def main() -> None:  # noqa: D103
     remote_sub.add_argument("-b", "--branch", type=str, default="main", help="Query branch")
     remote_sub.add_argument(
         "-r", "--root", type=str, default=".github/workflows/", help="Workflow root"
+    )
+    remote_sub.add_argument(
+        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
     )
     remote_sub.add_argument(
         "-m", "--markdown", action="store_true", help="Format report as markdown"
@@ -86,8 +93,16 @@ def main() -> None:  # noqa: D103
     )
 
     args = parser.parse_args()
+
+    if args.cooldown is not None:
+        cooldown = parse_cooldown(args.cooldown)
+    else:
+        cooldown = None
+
     if args.subcommand == "local":
-        asyncio.run(_local_report_pipeline(root=args.root, markdown=args.markdown))
+        asyncio.run(
+            _local_report_pipeline(root=args.root, cooldown=cooldown, markdown=args.markdown)
+        )
     elif args.subcommand == "bump":
         raise NotImplementedError
     else:
@@ -97,6 +112,7 @@ def main() -> None:  # noqa: D103
                 repo=args.repo,
                 root=args.root,
                 branch=args.branch,
+                cooldown=cooldown,
                 markdown=args.markdown,
             )
         )

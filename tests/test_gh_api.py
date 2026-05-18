@@ -5,7 +5,7 @@ import pytest
 from packaging.version import Version
 from pytest_mock import MockerFixture
 
-from check_workflow.gh_api import Release, fetch_releases, fetch_workflows
+from check_workflow.gh_api import Release, fetch_releases, fetch_workflows, parse_cooldown
 from tests import SAMPLE_DATA_DIR
 
 
@@ -181,5 +181,62 @@ async def test_release_query_skip_bad_tag(mocker: MockerFixture) -> None:
 
     releases = await fetch_releases(
         session=mock_session, owner="sco1", repo_name="flake8_annotations", n_latest=3
+    )
+    assert releases == TRUTH_OUT
+
+
+COOLDOWN_TEST_CASES = (
+    ("P0D", dt.timedelta(days=0)),
+    ("P7D", dt.timedelta(days=7)),
+    ("P14D", dt.timedelta(days=14)),
+    ("P180D", dt.timedelta(days=180)),
+)
+
+
+@pytest.mark.parametrize(("cooldown_spec", "truth_out"), COOLDOWN_TEST_CASES)
+def test_parse_cooldown(cooldown_spec: str, truth_out: dt.timedelta) -> None:
+    assert parse_cooldown(cooldown_spec) == truth_out
+
+
+BAD_COOLDOWN_CASES = ["p1D", "p1d", "P1d", "P1.5D", "ABCD", "P-5D", "P3Y6M4DT12H30M5S"]
+
+
+@pytest.mark.parametrize("cooldown_spec", BAD_COOLDOWN_CASES)
+def test_parse_cooldown_invalid_raises(cooldown_spec: str) -> None:
+    with pytest.raises(ValueError):
+        _ = parse_cooldown(cooldown_spec)
+
+
+@pytest.mark.asyncio
+@pytest.mark.time_machine(dt.datetime(2024, 5, 17))
+async def test_release_query_with_cooldown(mocker: MockerFixture) -> None:
+    SAMPLE_RESPONSE = SAMPLE_DATA_DIR / "release_query_multi.json"
+    with SAMPLE_RESPONSE.open("r") as f:
+        resp = json.load(f)
+
+    mock_session = mocker.AsyncMock()
+    mock_session.execute.return_value = resp
+
+    TRUTH_OUT = [
+        Release(
+            ver=Version("3.1.0"),
+            published=dt.datetime.fromisoformat("2024-05-06T18:47:23Z"),
+            url="https://github.com/sco1/flake8-annotations/releases/tag/v3.1.0",
+            tag_hash="ec8b88b35613b5274148a87decf2dfbecec1df31",
+        ),
+        Release(
+            ver=Version("3.0.1"),
+            published=dt.datetime.fromisoformat("2023-05-03T02:43:51Z"),
+            url="https://github.com/sco1/flake8-annotations/releases/tag/v3.0.1",
+            tag_hash="d831807bedbda4b084b184032daa9262705f2b71",
+        ),
+    ]
+
+    releases = await fetch_releases(
+        session=mock_session,
+        owner="sco1",
+        repo_name="flake8_annotations",
+        n_latest=3,
+        cooldown=dt.timedelta(days=3),
     )
     assert releases == TRUTH_OUT

@@ -58,6 +58,7 @@ dev = [
     "ruff~=0.9",
     "rumdl~=0.1.22",
     "sco1-bumper~=2.0",
+    "time-machine~=3.2",
     "tox~=4.23",
     "tox-uv~=1.17",
 ]
