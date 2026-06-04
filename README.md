@@ -108,6 +108,31 @@ options:
 
 <!-- [[[end]]] -->
 
+### Bump
+
+<!-- [[[cog
+import cog
+from subprocess import PIPE, run
+out = run(["CheckWorkflow", "bump", "--help"], stdout=PIPE, encoding="ascii")
+cog.out(
+    f"\n```text\n$ CheckWorkflow bump --help\n{out.stdout.rstrip()}\n```\n\n"
+)
+]]] -->
+
+```text
+$ CheckWorkflow bump --help
+usage: CheckWorkflow bump [-h] [-r ROOT] [--sha] [-c COOLDOWN]
+
+options:
+  -h, --help            show this help message and exit
+  -r ROOT, --root ROOT  Workflow root (default: ./.github/workflows/)
+  --sha                 Pin to SHA (default: False)
+  -c COOLDOWN, --cooldown COOLDOWN
+                        Dependency cooldown period, as PnD (default: None)
+```
+
+<!-- [[[end]]] -->
+
 ## Why Don't You Just Use Dependabot?
 
 Because I don't want to! 😊

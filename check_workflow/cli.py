@@ -3,6 +3,7 @@ import asyncio
 import datetime as dt
 from pathlib import Path
 
+from check_workflow.dep_bumper import bump_workflows
 from check_workflow.gh_api import CLIENT, fetch_workflows, parse_cooldown
 from check_workflow.workflow import fetch_local, format_outdated, report_outdated
 
@@ -39,6 +40,22 @@ async def _local_report_pipeline(root: Path, cooldown: dt.timedelta | None, mark
 
     if outdated:
         print(format_outdated(outdated, markdown=markdown))
+
+
+async def _local_bump_pipeline(root: Path, cooldown: dt.timedelta | None, use_sha: bool) -> None:
+    workflows = fetch_local(root)
+    if not workflows:
+        print(f"No workflows found at the provided root: {root}")
+        return
+
+    # While this approach does hit each workfile twice, it seems more straighforward to just reuse
+    # the existing caching logic since our time is pretty likely to be dominated by network calls. I
+    # don't think it's worth trying to be clever here.
+    async with CLIENT as session:
+        outdated = await report_outdated(session, workflows, cooldown)
+
+    if outdated:
+        bump_workflows(base_dir=root, outdated=outdated, use_sha=use_sha)
 
 
 def main() -> None:  # noqa: D103
@@ -104,7 +121,7 @@ def main() -> None:  # noqa: D103
             _local_report_pipeline(root=args.root, cooldown=cooldown, markdown=args.markdown)
         )
     elif args.subcommand == "bump":
-        raise NotImplementedError
+        asyncio.run(_local_bump_pipeline(root=args.root, cooldown=cooldown, use_sha=args.sha))
     else:
         asyncio.run(
             _remote_report_pipeline(
