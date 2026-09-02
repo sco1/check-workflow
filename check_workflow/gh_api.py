@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 import operator
 import os
 import platform
@@ -17,6 +18,8 @@ from httpx import Timeout
 from packaging.version import InvalidVersion, Version
 
 from check_workflow import WORKFLOW_T, __url__, __version__
+
+LOGGER = logging.getLogger(__name__)
 
 load_dotenv()
 TOK = os.environ.get("PUBLIC_PAT", "")
@@ -173,7 +176,9 @@ async def fetch_releases(
         try:
             rel = Release.from_node(r)
         except InvalidVersion:
-            print(f"{owner}/{repo_name}: Could not parse version '{r["tagName"]}', skipping...")
+            LOGGER.info(
+                f"{owner}/{repo_name}: Could not parse version '{r["tagName"]}', skipping..."
+            )
             continue
 
         if cooldown is None:
@@ -183,7 +188,7 @@ async def fetch_releases(
             if age >= cooldown:
                 releases.append(rel)
             else:
-                print(
+                LOGGER.warning(
                     f"{owner}/{repo_name}: Release '{r["tagName"]}' does not meet cooldown, skipping..."  # noqa: E501
                 )
 

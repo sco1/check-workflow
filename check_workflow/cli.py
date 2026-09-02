@@ -1,11 +1,30 @@
 import argparse
 import asyncio
 import datetime as dt
+import logging
+import sys
 from pathlib import Path
 
 from check_workflow.dep_bumper import bump_workflows
 from check_workflow.gh_api import CLIENT, fetch_workflows, parse_cooldown
 from check_workflow.workflow import fetch_local, format_outdated, report_outdated
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _set_log_level(verbosity: int) -> None:
+    LEVEL_MAPPING = {
+        0: logging.WARNING,
+        1: logging.INFO,
+        2: logging.DEBUG,
+    }
+
+    log_level = LEVEL_MAPPING.get(verbosity, logging.WARNING)
+    logging.basicConfig(
+        level=log_level,
+        format="%(levelname)s: %(message)s",
+        stream=sys.stderr,
+    )
 
 
 async def _remote_report_pipeline(
@@ -20,7 +39,7 @@ async def _remote_report_pipeline(
             branch=branch,
         )
         if not workflows:
-            print(f"No workflows found at the provided root: {root}")
+            LOGGER.warning(f"No workflows found at the provided root: {root}")
             return
 
         outdated = await report_outdated(session, workflows, cooldown)
@@ -32,7 +51,7 @@ async def _remote_report_pipeline(
 async def _local_report_pipeline(root: Path, cooldown: dt.timedelta | None, markdown: bool) -> None:
     workflows = fetch_local(root)
     if not workflows:
-        print(f"No workflows found at the provided root: {root}")
+        LOGGER.warning(f"No workflows found at the provided root: {root}")
         return
 
     async with CLIENT as session:
@@ -45,7 +64,7 @@ async def _local_report_pipeline(root: Path, cooldown: dt.timedelta | None, mark
 async def _local_bump_pipeline(root: Path, cooldown: dt.timedelta | None, use_sha: bool) -> None:
     workflows = fetch_local(root)
     if not workflows:
-        print(f"No workflows found at the provided root: {root}")
+        LOGGER.warning(f"No workflows found at the provided root: {root}")
         return
 
     # While this approach does hit each workfile twice, it seems more straighforward to just reuse
@@ -61,6 +80,8 @@ async def _local_bump_pipeline(root: Path, cooldown: dt.timedelta | None, use_sh
 def main() -> None:  # noqa: D103
     parser = argparse.ArgumentParser("CheckWorkflow")
     subparsers = parser.add_subparsers(dest="subcommand")
+
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase log verbosity")
 
     # Query local project
     local_sub = subparsers.add_parser(
@@ -110,6 +131,7 @@ def main() -> None:  # noqa: D103
     )
 
     args = parser.parse_args()
+    _set_log_level(args.verbose)
 
     if args.cooldown is not None:
         cooldown = parse_cooldown(args.cooldown)
