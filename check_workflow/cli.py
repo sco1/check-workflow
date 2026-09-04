@@ -82,6 +82,9 @@ def main() -> None:  # noqa: D103
     subparsers = parser.add_subparsers(dest="subcommand")
 
     parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase log verbosity")
+    parser.add_argument(
+        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
+    )
 
     # Query local project
     local_sub = subparsers.add_parser(
@@ -89,9 +92,6 @@ def main() -> None:  # noqa: D103
     )
     local_sub.add_argument(
         "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
-    )
-    local_sub.add_argument(
-        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
     )
     local_sub.add_argument(
         "-m", "--markdown", action="store_true", help="Format report as markdown"
@@ -110,9 +110,6 @@ def main() -> None:  # noqa: D103
         "-r", "--root", type=str, default=".github/workflows/", help="Workflow root"
     )
     remote_sub.add_argument(
-        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
-    )
-    remote_sub.add_argument(
         "-m", "--markdown", action="store_true", help="Format report as markdown"
     )
 
@@ -126,9 +123,6 @@ def main() -> None:  # noqa: D103
         "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
     )
     bump_sub.add_argument("--sha", action="store_true", help="Pin to SHA")
-    bump_sub.add_argument(
-        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
-    )
 
     args = parser.parse_args()
     _set_log_level(args.verbose)

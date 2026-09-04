@@ -35,15 +35,19 @@ Alternatively, you can use a tool like `uv` or `pipx` to run or install this pro
 
 ```text
 $ uvx --from git+https://github.com/sco1/check-workflow@v1.4.0 CheckWorkflow --help
-usage: CheckWorkflow [-h] {local,remote} ...
+usage: CheckWorkflow [-h] [-v] [-c COOLDOWN] {local,remote,bump} ...
 
 positional arguments:
-  {local,remote}
-    local         Query local project
-    remote        Query remote repository
+  {local,remote,bump}
+    local               Query local project
+    remote              Query remote repository
+    bump                Bump local workflow dependencies
 
 options:
-  -h, --help      show this help message and exit
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase log verbosity
+  -c, --cooldown COOLDOWN
+                        Dependency cooldown period, as PnD
 ```
 
 ## Usage
@@ -65,14 +69,12 @@ cog.out(
 
 ```text
 $ CheckWorkflow local --help
-usage: CheckWorkflow local [-h] [-r ROOT] [-c COOLDOWN] [-m]
+usage: CheckWorkflow local [-h] [-r ROOT] [-m]
 
 options:
-  -h, --help            show this help message and exit
-  -r ROOT, --root ROOT  Workflow root (default: ./.github/workflows/)
-  -c COOLDOWN, --cooldown COOLDOWN
-                        Dependency cooldown period, as PnD (default: None)
-  -m, --markdown        Format report as markdown (default: False)
+  -h, --help       show this help message and exit
+  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  -m, --markdown   Format report as markdown (default: False)
 ```
 
 <!-- [[[end]]] -->
@@ -90,20 +92,17 @@ cog.out(
 
 ```text
 $ CheckWorkflow remote --help
-usage: CheckWorkflow remote [-h] [-b BRANCH] [-r ROOT] [-c COOLDOWN] [-m] org repo
+usage: CheckWorkflow remote [-h] [-b BRANCH] [-r ROOT] [-m] org repo
 
 positional arguments:
-  org                   Query repository parent
-  repo                  Query repository
+  org                  Query repository parent
+  repo                 Query repository
 
 options:
-  -h, --help            show this help message and exit
-  -b BRANCH, --branch BRANCH
-                        Query branch (default: main)
-  -r ROOT, --root ROOT  Workflow root (default: .github/workflows/)
-  -c COOLDOWN, --cooldown COOLDOWN
-                        Dependency cooldown period, as PnD (default: None)
-  -m, --markdown        Format report as markdown (default: False)
+  -h, --help           show this help message and exit
+  -b, --branch BRANCH  Query branch (default: main)
+  -r, --root ROOT      Workflow root (default: .github/workflows/)
+  -m, --markdown       Format report as markdown (default: False)
 ```
 
 <!-- [[[end]]] -->
@@ -121,14 +120,12 @@ cog.out(
 
 ```text
 $ CheckWorkflow bump --help
-usage: CheckWorkflow bump [-h] [-r ROOT] [--sha] [-c COOLDOWN]
+usage: CheckWorkflow bump [-h] [-r ROOT] [--sha]
 
 options:
-  -h, --help            show this help message and exit
-  -r ROOT, --root ROOT  Workflow root (default: ./.github/workflows/)
-  --sha                 Pin to SHA (default: False)
-  -c COOLDOWN, --cooldown COOLDOWN
-                        Dependency cooldown period, as PnD (default: None)
+  -h, --help       show this help message and exit
+  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  --sha            Pin to SHA (default: False)
 ```
 
 <!-- [[[end]]] -->
