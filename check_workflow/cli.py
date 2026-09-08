@@ -1,13 +1,34 @@
 import argparse
 import asyncio
+import datetime as dt
+import logging
+import sys
 from pathlib import Path
 
-from check_workflow.gh_api import CLIENT, fetch_workflows
+from check_workflow.dep_bumper import bump_workflows
+from check_workflow.gh_api import CLIENT, fetch_workflows, parse_cooldown
 from check_workflow.workflow import fetch_local, format_outdated, report_outdated
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _set_log_level(verbosity: int) -> None:
+    LEVEL_MAPPING = {
+        0: logging.WARNING,
+        1: logging.INFO,
+        2: logging.DEBUG,
+    }
+
+    log_level = LEVEL_MAPPING.get(verbosity, logging.WARNING)
+    logging.basicConfig(
+        level=log_level,
+        format="%(levelname)s: %(message)s",
+        stream=sys.stderr,
+    )
 
 
 async def _remote_report_pipeline(
-    org: str, repo: str, root: str, branch: str, markdown: bool
+    org: str, repo: str, root: str, branch: str, cooldown: dt.timedelta | None, markdown: bool
 ) -> None:
     async with CLIENT as session:
         workflows = await fetch_workflows(
@@ -18,31 +39,57 @@ async def _remote_report_pipeline(
             branch=branch,
         )
         if not workflows:
-            print(f"No workflows found at the provided root: {root}")
+            LOGGER.warning(f"No workflows found at the provided root: {root}")
             return
 
-        outdated = await report_outdated(session, workflows)
+        outdated = await report_outdated(session, workflows, cooldown)
 
     if outdated:
         print(format_outdated(outdated, markdown=markdown))
 
 
-async def _local_report_pipeline(root: Path, markdown: bool) -> None:
+async def _local_report_pipeline(root: Path, cooldown: dt.timedelta | None, markdown: bool) -> None:
     workflows = fetch_local(root)
     if not workflows:
-        print(f"No workflows found at the provided root: {root}")
+        LOGGER.warning(f"No workflows found at the provided root: {root}")
         return
 
     async with CLIENT as session:
-        outdated = await report_outdated(session, workflows)
+        outdated = await report_outdated(session, workflows, cooldown)
 
     if outdated:
         print(format_outdated(outdated, markdown=markdown))
+
+
+async def _local_bump_pipeline(
+    root: Path,
+    cooldown: dt.timedelta | None,
+    use_sha: bool,
+    dry_run: bool,
+) -> None:
+    workflows = fetch_local(root)
+    if not workflows:
+        LOGGER.warning(f"No workflows found at the provided root: {root}")
+        return
+
+    # While this approach does hit each workfile twice, it seems more straighforward to just reuse
+    # the existing caching logic since our time is pretty likely to be dominated by network calls. I
+    # don't think it's worth trying to be clever here.
+    async with CLIENT as session:
+        outdated = await report_outdated(session, workflows, cooldown)
+
+    if outdated:
+        bump_workflows(base_dir=root, outdated=outdated, use_sha=use_sha, dry_run=dry_run)
 
 
 def main() -> None:  # noqa: D103
     parser = argparse.ArgumentParser("CheckWorkflow")
     subparsers = parser.add_subparsers(dest="subcommand")
+
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase log verbosity")
+    parser.add_argument(
+        "-c", "--cooldown", type=str, default=None, help="Dependency cooldown period, as PnD"
+    )
 
     # Query local project
     local_sub = subparsers.add_parser(
@@ -71,9 +118,39 @@ def main() -> None:  # noqa: D103
         "-m", "--markdown", action="store_true", help="Format report as markdown"
     )
 
+    # Dependency bumper
+    bump_sub = subparsers.add_parser(
+        "bump",
+        help="Bump local workflow dependencies",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    bump_sub.add_argument(
+        "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
+    )
+    bump_sub.add_argument("--sha", action="store_true", help="Pin to SHA")
+    bump_sub.add_argument("--dry-run", action="store_true", help="Preview the requested diff")
+
     args = parser.parse_args()
+    _set_log_level(args.verbose)
+
+    if args.cooldown is not None:
+        cooldown = parse_cooldown(args.cooldown)
+    else:
+        cooldown = None
+
     if args.subcommand == "local":
-        asyncio.run(_local_report_pipeline(root=args.root, markdown=args.markdown))
+        asyncio.run(
+            _local_report_pipeline(root=args.root, cooldown=cooldown, markdown=args.markdown)
+        )
+    elif args.subcommand == "bump":
+        asyncio.run(
+            _local_bump_pipeline(
+                root=args.root,
+                cooldown=cooldown,
+                use_sha=args.sha,
+                dry_run=args.dry_run,
+            )
+        )
     else:
         asyncio.run(
             _remote_report_pipeline(
@@ -81,6 +158,7 @@ def main() -> None:  # noqa: D103
                 repo=args.repo,
                 root=args.root,
                 branch=args.branch,
+                cooldown=cooldown,
                 markdown=args.markdown,
             )
         )

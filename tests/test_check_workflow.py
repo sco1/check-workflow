@@ -146,7 +146,7 @@ async def test_report_outdated_by_version(mocker: MockerFixture) -> None:
         side_effect=LATEST_RELEASES,
     )
 
-    outdated = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS)
+    outdated = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS, cooldown=None)
     assert outdated == TRUTH_OUTDATED
 
 
@@ -172,7 +172,7 @@ async def test_report_outdated_by_sha(mocker: MockerFixture) -> None:
         side_effect=LATEST_RELEASES,
     )
 
-    outdated = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS)
+    outdated = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS, cooldown=None)
     assert outdated == TRUTH_OUTDATED
 
 
@@ -198,7 +198,7 @@ async def test_report_outdated_caches(mocker: MockerFixture) -> None:
         "check_workflow.workflow.fetch_releases", new_callable=mocker.AsyncMock, return_value=LATEST
     )
 
-    _ = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS)
+    _ = await report_outdated(session=mock_session, raw_workflows=WORKFLOWS, cooldown=None)
     patched.assert_awaited_once()
 
 

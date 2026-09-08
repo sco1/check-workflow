@@ -2,6 +2,17 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.4.0]`
+
+### Added
+
+* #25 Add `bump` subcommand to automatically bump outdated dependencies
+* Add dependency cooldown support to all subcommands
+
+### Changed
+
+* #31 Swap to `logging` from `print` statements for internal messaging; add `-v/--verbose` flag to CLI entry
+
 ## `[v1.3.0]`
 
 ### Added

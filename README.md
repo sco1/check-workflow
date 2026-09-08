@@ -34,21 +34,27 @@ Since this is mainly intended as a personal helper, I do not intend to deploy th
 Alternatively, you can use a tool like `uv` or `pipx` to run or install this project as a standalone tool, e.g.:
 
 ```text
-$ uvx --from git+https://github.com/sco1/check-workflow@v1.3.0 CheckWorkflow --help
-usage: CheckWorkflow [-h] {local,remote} ...
+$ uvx --from git+https://github.com/sco1/check-workflow@v1.4.0 CheckWorkflow --help
+usage: CheckWorkflow [-h] [-v] [-c COOLDOWN] {local,remote,bump} ...
 
 positional arguments:
-  {local,remote}
-    local         Query local project
-    remote        Query remote repository
+  {local,remote,bump}
+    local               Query local project
+    remote              Query remote repository
+    bump                Bump local workflow dependencies
 
 options:
-  -h, --help      show this help message and exit
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase log verbosity
+  -c, --cooldown COOLDOWN
+                        Dependency cooldown period, as PnD
 ```
 
 ## Usage
 
 Manual reports can be generated using the `CheckWorkflow` CLI for either a local or remote project.
+
+All subcommands provide the ability to specify a dependency cooldown period as `PnD`, e.g. `P7D` will ignore any releases that are not at least 7 days old. Note that if your existing pins were specified without a cooldown in mind this may result in a "latest" result that is older than the current pin.
 
 ### Local
 
@@ -66,9 +72,9 @@ $ CheckWorkflow local --help
 usage: CheckWorkflow local [-h] [-r ROOT] [-m]
 
 options:
-  -h, --help            show this help message and exit
-  -r ROOT, --root ROOT  Workflow root (default: ./.github/workflows/)
-  -m, --markdown        Format report as markdown (default: False)
+  -h, --help       show this help message and exit
+  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  -m, --markdown   Format report as markdown (default: False)
 ```
 
 <!-- [[[end]]] -->
@@ -89,15 +95,38 @@ $ CheckWorkflow remote --help
 usage: CheckWorkflow remote [-h] [-b BRANCH] [-r ROOT] [-m] org repo
 
 positional arguments:
-  org                   Query repository parent
-  repo                  Query repository
+  org                  Query repository parent
+  repo                 Query repository
 
 options:
-  -h, --help            show this help message and exit
-  -b BRANCH, --branch BRANCH
-                        Query branch (default: main)
-  -r ROOT, --root ROOT  Workflow root (default: .github/workflows/)
-  -m, --markdown        Format report as markdown (default: False)
+  -h, --help           show this help message and exit
+  -b, --branch BRANCH  Query branch (default: main)
+  -r, --root ROOT      Workflow root (default: .github/workflows/)
+  -m, --markdown       Format report as markdown (default: False)
+```
+
+<!-- [[[end]]] -->
+
+### Bump
+
+<!-- [[[cog
+import cog
+from subprocess import PIPE, run
+out = run(["CheckWorkflow", "bump", "--help"], stdout=PIPE, encoding="ascii")
+cog.out(
+    f"\n```text\n$ CheckWorkflow bump --help\n{out.stdout.rstrip()}\n```\n\n"
+)
+]]] -->
+
+```text
+$ CheckWorkflow bump --help
+usage: CheckWorkflow bump [-h] [-r ROOT] [--sha] [--dry-run]
+
+options:
+  -h, --help       show this help message and exit
+  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  --sha            Pin to SHA (default: False)
+  --dry-run        Preview the requested diff (default: False)
 ```
 
 <!-- [[[end]]] -->
