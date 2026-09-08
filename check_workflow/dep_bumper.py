@@ -1,3 +1,4 @@
+import difflib
 import logging
 import re
 from pathlib import Path
@@ -11,7 +12,12 @@ LOGGER = logging.getLogger(__name__)
 SPEC_RE = re.compile(r"(?P<spec>[^'\"\s]+)(?P<comment>[ \t]*(?:#.*)?)$")
 
 
-def bump_workflows(base_dir: Path, outdated: dict[str, list[OutdatedDep]], use_sha: bool) -> None:
+def bump_workflows(
+    base_dir: Path,
+    outdated: dict[str, list[OutdatedDep]],
+    use_sha: bool,
+    dry_run: bool,
+) -> None:
     """
     Use the provided collection of outdated dependencies to bump the containing workflow files.
 
@@ -64,6 +70,18 @@ def bump_workflows(base_dir: Path, outdated: dict[str, list[OutdatedDep]], use_s
                 changed = True
 
         if changed:
-            LOGGER.debug(f"Writing changes to {wf_name}")
-            raw_lines.append("")  # Ensure file ends with a newline
-            wf.write_text("\n".join(raw_lines))
+            if not dry_run:
+                LOGGER.debug(f"Writing changes to {wf_name}")
+                raw_lines.append("")  # Ensure file ends with a newline
+                wf.write_text("\n".join(raw_lines))
+            else:
+                diff = difflib.unified_diff(
+                    wf.read_text().splitlines(),  # Could just stash up above, but this is fine
+                    raw_lines,
+                    fromfile=wf_name,
+                    n=0,
+                    lineterm="",
+                )
+
+                # Strip trailing whitespace to make testing easier
+                print("\n".join(line.rstrip() for line in diff))

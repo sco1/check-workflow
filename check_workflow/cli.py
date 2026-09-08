@@ -61,7 +61,12 @@ async def _local_report_pipeline(root: Path, cooldown: dt.timedelta | None, mark
         print(format_outdated(outdated, markdown=markdown))
 
 
-async def _local_bump_pipeline(root: Path, cooldown: dt.timedelta | None, use_sha: bool) -> None:
+async def _local_bump_pipeline(
+    root: Path,
+    cooldown: dt.timedelta | None,
+    use_sha: bool,
+    dry_run: bool,
+) -> None:
     workflows = fetch_local(root)
     if not workflows:
         LOGGER.warning(f"No workflows found at the provided root: {root}")
@@ -74,7 +79,7 @@ async def _local_bump_pipeline(root: Path, cooldown: dt.timedelta | None, use_sh
         outdated = await report_outdated(session, workflows, cooldown)
 
     if outdated:
-        bump_workflows(base_dir=root, outdated=outdated, use_sha=use_sha)
+        bump_workflows(base_dir=root, outdated=outdated, use_sha=use_sha, dry_run=dry_run)
 
 
 def main() -> None:  # noqa: D103
@@ -123,6 +128,7 @@ def main() -> None:  # noqa: D103
         "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
     )
     bump_sub.add_argument("--sha", action="store_true", help="Pin to SHA")
+    bump_sub.add_argument("--dry-run", action="store_true", help="Preview the requested diff")
 
     args = parser.parse_args()
     _set_log_level(args.verbose)
@@ -137,7 +143,14 @@ def main() -> None:  # noqa: D103
             _local_report_pipeline(root=args.root, cooldown=cooldown, markdown=args.markdown)
         )
     elif args.subcommand == "bump":
-        asyncio.run(_local_bump_pipeline(root=args.root, cooldown=cooldown, use_sha=args.sha))
+        asyncio.run(
+            _local_bump_pipeline(
+                root=args.root,
+                cooldown=cooldown,
+                use_sha=args.sha,
+                dry_run=args.dry_run,
+            )
+        )
     else:
         asyncio.run(
             _remote_report_pipeline(

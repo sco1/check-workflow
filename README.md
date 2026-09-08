@@ -120,12 +120,13 @@ cog.out(
 
 ```text
 $ CheckWorkflow bump --help
-usage: CheckWorkflow bump [-h] [-r ROOT] [--sha]
+usage: CheckWorkflow bump [-h] [-r ROOT] [--sha] [--dry-run]
 
 options:
   -h, --help       show this help message and exit
   -r, --root ROOT  Workflow root (default: ./.github/workflows/)
   --sha            Pin to SHA (default: False)
+  --dry-run        Preview the requested diff (default: False)
 ```
 
 <!-- [[[end]]] -->
