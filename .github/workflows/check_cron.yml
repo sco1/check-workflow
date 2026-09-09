@@ -13,37 +13,37 @@ jobs:
       issues: write
 
     steps:
-    - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7.0.1
 
-    - name: Set up Python
-      uses: actions/setup-python@v7.0.0
-      with:
-        python-version-file: "pyproject.toml"
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version-file: "pyproject.toml"
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v10.0.1
-      with:
-        version: "0.12.x"
-        enable-cache: true
-        cache-dependency-glob: "uv.lock"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "0.12.x"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-    - name: Run report
-      id: report
-      env:
-        PUBLIC_PAT: ${{ secrets.PUBLIC_PAT }}
-      run: |
-        {
-          echo 'RES<<EOF'
-          uv run --no-dev CheckWorkflow remote -m sco1 py-template
-          echo EOF
-        } >> "$GITHUB_OUTPUT"
+      - name: Run report
+        id: report
+        env:
+          PUBLIC_PAT: ${{ secrets.PUBLIC_PAT }}
+        run: |
+          {
+            echo 'RES<<EOF'
+            uv run --no-dev CheckWorkflow remote -m sco1 py-template
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
 
-    - name: Open Issue If Any Outdated
-      if: ${{ steps.report.outputs.RES != ''}}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        today=$(date +"%Y-%m-%d")
-        gh issue create \
-          --title "($today) Outdated Dependency Report" \
-          --body '${{ steps.report.outputs.RES }}'
+      - name: Open Issue If Any Outdated
+        if: ${{ steps.report.outputs.RES != ''}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          today=$(date +"%Y-%m-%d")
+          gh issue create \
+            --title "($today) Outdated Dependency Report" \
+            --body '${{ steps.report.outputs.RES }}'

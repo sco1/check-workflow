@@ -12,25 +12,24 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7.0.1
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v10.0.1
-      with:
-        version: "0.12.x"
-        enable-cache: true
-        cache-dependency-glob: "uv.lock"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "0.12.x"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-    - name: Set up Python
-      uses: actions/setup-python@v7.0.0
-      with:
-        python-version-file: "pyproject.toml"
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version-file: "pyproject.toml"
 
-    - name: Build package
-      run: uv build
+      - name: Build package
+        run: uv build
 
-    - name: Upload wheel to release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run:
-        gh release upload ${{ github.event.release.tag_name }} ./dist/check_workflow-*.whl
+      - name: Upload wheel to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} ./dist/check_workflow-*.whl

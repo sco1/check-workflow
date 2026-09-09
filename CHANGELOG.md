@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.4.1]`
+
+### Changed
+
+* #33 Fix missing updates when full version is specified
+
 ## `[v1.4.0]`
 
 ### Added
