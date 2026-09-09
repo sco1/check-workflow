@@ -19,11 +19,11 @@ from check_workflow.workflow import (
 SPEC_FROM_RAW_TEST_CASES = (
     (
         "actions/setup-python@v6",
-        UsesSpec(owner="actions", repo="setup-python", spec=SpecifierSet("~=6.0"), sha=None),
+        UsesSpec(owner="actions", repo="setup-python", spec=SpecifierSet("<=6.0"), sha=None),
     ),
     (
         "deadsnakes/action@v3.2.0",
-        UsesSpec(owner="deadsnakes", repo="action", spec=SpecifierSet("~=3.2.0"), sha=None),
+        UsesSpec(owner="deadsnakes", repo="action", spec=SpecifierSet("<=3.2.0"), sha=None),
     ),
     (
         "actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3",
@@ -123,7 +123,7 @@ async def test_report_outdated_by_version(mocker: MockerFixture) -> None:
     # For this test only actions/checkout is outdated
     LATEST_RELEASES = (
         [Release(ver=Version("5.0"), published=dt.datetime.now(), url="", tag_hash="")],  # outdated
-        [Release(ver=Version("6.1"), published=dt.datetime.now(), url="", tag_hash="")],
+        [Release(ver=Version("6.0"), published=dt.datetime.now(), url="", tag_hash="")],
         [
             Release(
                 ver=Version("1.0"),
@@ -150,13 +150,43 @@ async def test_report_outdated_by_version(mocker: MockerFixture) -> None:
     assert outdated == TRUTH_OUTDATED
 
 
+WORKFLOW_FULL_VER = """\
+jobs:
+    lint:
+        steps:
+        - uses: actions/checkout@v7.0.0
+"""
+
+
+@pytest.mark.asyncio
+async def test_report_outdated_full_spec(mocker: MockerFixture) -> None:
+    DEPENDENCY = JobDependency(
+        job="lint", step_name=None, uses=UsesSpec.from_raw("actions/checkout@v7.0.0")
+    )
+    LATEST_RELEASE = [
+        [Release(ver=Version("7.0.1"), published=dt.datetime.now(), url="", tag_hash="")]
+    ]
+    WORKFLOW = {"wf.yml": WORKFLOW_FULL_VER}
+    TRUTH_OUTDATED = {"wf.yml": [OutdatedDep(spec=DEPENDENCY, latest=LATEST_RELEASE[0][0])]}
+
+    mock_session = mocker.AsyncMock()
+    mocker.patch(
+        "check_workflow.workflow.fetch_releases",
+        new_callable=mocker.AsyncMock,
+        side_effect=LATEST_RELEASE,
+    )
+
+    outdated = await report_outdated(session=mock_session, raw_workflows=WORKFLOW, cooldown=None)
+    assert outdated == TRUTH_OUTDATED
+
+
 @pytest.mark.asyncio
 async def test_report_outdated_by_sha(mocker: MockerFixture) -> None:
     # Latest release for each dependency, in order.
     # For this test only ooga/booga is outdated
     LATEST_RELEASES = (
         [Release(ver=Version("4.0"), published=dt.datetime.now(), url="", tag_hash="")],
-        [Release(ver=Version("6.1"), published=dt.datetime.now(), url="", tag_hash="")],
+        [Release(ver=Version("6.0"), published=dt.datetime.now(), url="", tag_hash="")],
         [Release(ver=Version("1.0"), published=dt.datetime.now(), url="", tag_hash="abc123")],
         [Release(ver=Version("3.2.0"), published=dt.datetime.now(), url="", tag_hash="")],
     )

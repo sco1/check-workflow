@@ -31,8 +31,8 @@ class UsesSpec(t.NamedTuple):  # noqa: D101
             * `"actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3"`
 
         If a version specifier is used, the resulting instance's `spec` attribute is built using a
-        compatible release clause (`~=`) and the `sha` attribute will be `None`. Otherwise, `spec`
-        will be `None` and `sha` will be the pinned SHA.
+        LTE clause (`<=`) and the `sha` attribute will be `None`. Otherwise, `spec` will be `None`
+        and `sha` will be the pinned SHA.
         """
         action, raw_ver = raw_spec.split("@")
         *_, raw_ver = raw_ver.split("/")  # May use a branch, which we don't care about
@@ -47,10 +47,11 @@ class UsesSpec(t.NamedTuple):  # noqa: D101
             raw_ver = raw_ver.removeprefix("v")  # Some repos may prefix their tags
 
             if len(raw_ver.split(".")) == 1:
+                # For downstream use, use LTE so new versions will fall outside of the range
                 # Major-only version spec needs special handling, otherwise SpecifierSet will raise
-                spec = SpecifierSet(f"~={raw_ver}.0")
+                spec = SpecifierSet(f"<={raw_ver}.0")
             else:
-                spec = SpecifierSet(f"~={raw_ver}")
+                spec = SpecifierSet(f"<={raw_ver}")
 
         return cls(owner=owner, repo=repo, spec=spec, sha=sha)
 
