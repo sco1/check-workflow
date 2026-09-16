@@ -5,7 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from gql.client import AsyncClientSession
-from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 from prettytable import PrettyTable, TableStyle
 from ruamel.yaml import YAML
 
@@ -16,7 +16,7 @@ from check_workflow.gh_api import Release, fetch_releases
 class UsesSpec(t.NamedTuple):  # noqa: D101
     owner: str
     repo: str
-    spec: SpecifierSet | None
+    spec: Version | None
     sha: str | None
 
     @classmethod
@@ -30,9 +30,9 @@ class UsesSpec(t.NamedTuple):  # noqa: D101
             * `"deadsnakes/action@v3.2.0"`
             * `"actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3"`
 
-        If a version specifier is used, the resulting instance's `spec` attribute is built using a
-        LTE clause (`<=`) and the `sha` attribute will be `None`. Otherwise, `spec` will be `None`
-        and `sha` will be the pinned SHA.
+        If a version specifier is used, the resulting instance's `sha` attribute will be `None` and
+        `spec` will be a `packaging.version.Version` instance. Otherwise, `spec` will be `None` and
+        `sha` will be the pinned SHA.
         """
         action, raw_ver = raw_spec.split("@")
         *_, raw_ver = raw_ver.split("/")  # May use a branch, which we don't care about
@@ -44,14 +44,7 @@ class UsesSpec(t.NamedTuple):  # noqa: D101
             sha = raw_ver
         else:
             sha = None
-            raw_ver = raw_ver.removeprefix("v")  # Some repos may prefix their tags
-
-            if len(raw_ver.split(".")) == 1:
-                # For downstream use, use LTE so new versions will fall outside of the range
-                # Major-only version spec needs special handling, otherwise SpecifierSet will raise
-                spec = SpecifierSet(f"<={raw_ver}.0")
-            else:
-                spec = SpecifierSet(f"<={raw_ver}")
+            spec = Version(raw_ver.removeprefix("v"))  # Some repos may prefix their tags
 
         return cls(owner=owner, repo=repo, spec=spec, sha=sha)
 
@@ -133,7 +126,7 @@ async def report_outdated(
             # comparison happens we can go with this assumption vs. adding more narrowing logic
             is_outdated = False
             if dep.uses.sha is None:
-                if latest.ver not in dep.uses.spec:  # type: ignore[operator]
+                if latest.ver > dep.uses.spec:  # type: ignore[operator]
                     is_outdated = True
             else:
                 if latest.tag_hash != dep.uses.sha:

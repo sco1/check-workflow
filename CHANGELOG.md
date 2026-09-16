@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.4.2]`
+
+### Changed
+
+* #35 Printed specifier now reflects what is defined by the source workflow rather than a specifier set
+
 ## `[v1.4.1]`
 
 ### Changed

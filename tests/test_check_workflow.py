@@ -2,7 +2,6 @@ import datetime as dt
 from pathlib import Path
 
 import pytest
-from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from pytest_mock import MockerFixture
 
@@ -19,11 +18,11 @@ from check_workflow.workflow import (
 SPEC_FROM_RAW_TEST_CASES = (
     (
         "actions/setup-python@v6",
-        UsesSpec(owner="actions", repo="setup-python", spec=SpecifierSet("<=6.0"), sha=None),
+        UsesSpec(owner="actions", repo="setup-python", spec=Version("6"), sha=None),
     ),
     (
         "deadsnakes/action@v3.2.0",
-        UsesSpec(owner="deadsnakes", repo="action", spec=SpecifierSet("<=3.2.0"), sha=None),
+        UsesSpec(owner="deadsnakes", repo="action", spec=Version("3.2.0"), sha=None),
     ),
     (
         "actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3",

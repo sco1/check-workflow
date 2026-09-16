@@ -13,17 +13,17 @@ lint_test.yml
 +-------------+-------------------------+---------------------------+-----------+--------+
 |     Job     |        Step Name        |           Action          | Specified | Latest |
 +-------------+-------------------------+---------------------------+-----------+--------+
-|     lint    |           None          |      actions/checkout     |   ~=4.0   | 5.0.0  |
-|     test    |           None          |      actions/checkout     |   ~=4.0   | 5.0.0  |
-| combine-cov |           None          |      actions/checkout     |   ~=4.0   | 5.0.0  |
-| combine-cov | Pull workflow artifacts | actions/download-artifact |   ~=4.0   | 5.0.0  |
+|     lint    |           None          |      actions/checkout     |   4.0.0   | 5.0.0  |
+|     test    |           None          |      actions/checkout     |   4.0.0   | 5.0.0  |
+| combine-cov |           None          |      actions/checkout     |   4.0.0   | 5.0.0  |
+| combine-cov | Pull workflow artifacts | actions/download-artifact |   4.0.0   | 5.0.0  |
 +-------------+-------------------------+---------------------------+-----------+--------+
 
 release.yml
 +-------+-----------+------------------+-----------+--------+
 |  Job  | Step Name |      Action      | Specified | Latest |
 +-------+-----------+------------------+-----------+--------+
-| build |    None   | actions/checkout |   ~=4.0   | 5.0.0  |
+| build |    None   | actions/checkout |   4.0.0   | 5.0.0  |
 +-------+-----------+------------------+-----------+--------+
 ```
 
@@ -34,7 +34,7 @@ Since this is mainly intended as a personal helper, I do not intend to deploy th
 Alternatively, you can use a tool like `uv` or `pipx` to run or install this project as a standalone tool, e.g.:
 
 ```text
-$ uvx --from git+https://github.com/sco1/check-workflow@v1.4.1 CheckWorkflow --help
+$ uvx --from git+https://github.com/sco1/check-workflow@v1.4.2 CheckWorkflow --help
 usage: CheckWorkflow [-h] [-v] [-c COOLDOWN] {local,remote,bump} ...
 
 positional arguments:
