@@ -109,6 +109,7 @@ def test_single_bump_dry_run(tmp_path: Path, capsys: pytest.CaptureFixture) -> N
     OUTDATED = {WF_NAME: SINGLE_BUMP_OUTDATED_VER}
 
     bump_workflows(base_dir=tmp_path, outdated=OUTDATED, use_sha=True, dry_run=True)
+    assert SAMPLE_WF.read_text() == SAMPLE_WORKFLOW
 
     captured = capsys.readouterr()
     assert captured.out == TRUTH_SINGLE_DIFF
