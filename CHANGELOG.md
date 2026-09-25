@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.5.0]`
+
+### Added
+
+* Add `checkworkflow swap_sha` CLI helper for converting version-pinned dependencies to SHA pins
+
 ## `[v1.4.2]`
 
 ### Changed

@@ -29,19 +29,20 @@ release.yml
 
 ## Installation
 
-Since this is mainly intended as a personal helper, I do not intend to deploy this project to PyPI. Wheels are built in CI for each [released version](https://github.com/sco1/check-workflow/releases/latest).
+Since this is mainly intended as a personal helper, there is no intent to deploy this project to PyPI. Wheels are built in CI for each [released version](https://github.com/sco1/check-workflow/releases/latest).
 
 Alternatively, you can use a tool like `uv` or `pipx` to run or install this project as a standalone tool, e.g.:
 
 ```text
-$ uvx --from git+https://github.com/sco1/check-workflow@v1.4.2 CheckWorkflow --help
-usage: CheckWorkflow [-h] [-v] [-c COOLDOWN] {local,remote,bump} ...
+$ uvx --from git+https://github.com/sco1/check-workflow@v1.5.0 CheckWorkflow --help
+usage: CheckWorkflow [-h] [-v] [-c COOLDOWN] {local,remote,bump,add_sha} ...
 
 positional arguments:
-  {local,remote,bump}
+  {local,remote,bump,add_sha}
     local               Query local project
     remote              Query remote repository
     bump                Bump local workflow dependencies
+    add_sha             Replace version pins with SHA pins
 
 options:
   -h, --help            show this help message and exit
@@ -57,6 +58,8 @@ Manual reports can be generated using the `CheckWorkflow` CLI for either a local
 All subcommands provide the ability to specify a dependency cooldown period as `PnD`, e.g. `P7D` will ignore any releases that are not at least 7 days old. Note that if your existing pins were specified without a cooldown in mind this may result in a "latest" result that is older than the current pin.
 
 ### Local
+
+Check for dependency updates for GHA workflows defined in the specified root.
 
 <!-- [[[cog
 import cog
@@ -80,6 +83,8 @@ options:
 <!-- [[[end]]] -->
 
 ### Remote
+
+Check for dependency updates for GHA workflows defined by the specified GitHub repository.
 
 <!-- [[[cog
 import cog
@@ -109,6 +114,8 @@ options:
 
 ### Bump
 
+Automatically bump the dependencies for workflows defined at the specified local root.
+
 <!-- [[[cog
 import cog
 from subprocess import PIPE, run
@@ -126,6 +133,31 @@ options:
   -h, --help       show this help message and exit
   -r, --root ROOT  Workflow root (default: ./.github/workflows/)
   --sha            Pin to SHA (default: False)
+  --dry-run        Preview the requested diff (default: False)
+```
+
+<!-- [[[end]]] -->
+
+### Add SHA
+
+Convert existing version pins to the most recent SHA pin for workflows defined at the specified local root.
+
+<!-- [[[cog
+import cog
+from subprocess import PIPE, run
+out = run(["CheckWorkflow", "add_sha", "--help"], stdout=PIPE, encoding="ascii")
+cog.out(
+    f"\n```text\n$ CheckWorkflow add_sha --help\n{out.stdout.rstrip()}\n```\n\n"
+)
+]]] -->
+
+```text
+$ CheckWorkflow add_sha --help
+usage: CheckWorkflow add_sha [-h] [-r ROOT] [--dry-run]
+
+options:
+  -h, --help       show this help message and exit
+  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
   --dry-run        Preview the requested diff (default: False)
 ```
 

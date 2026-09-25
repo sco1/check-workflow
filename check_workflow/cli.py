@@ -7,6 +7,7 @@ from pathlib import Path
 
 from check_workflow.dep_bumper import bump_workflows
 from check_workflow.gh_api import CLIENT, fetch_workflows, parse_cooldown
+from check_workflow.sha_swap import _fetch_all_latest, _gather_dependencies, swap_to_sha
 from check_workflow.workflow import fetch_local, format_outdated, report_outdated
 
 LOGGER = logging.getLogger(__name__)
@@ -82,6 +83,23 @@ async def _local_bump_pipeline(
         bump_workflows(base_dir=root, outdated=outdated, use_sha=use_sha, dry_run=dry_run)
 
 
+async def _local_swap_sha_pipeline(
+    root: Path,
+    cooldown: dt.timedelta | None,
+    dry_run: bool,
+) -> None:
+    workflows = fetch_local(root)
+    if not workflows:
+        LOGGER.warning(f"No workflows found at the provided root: {root}")
+        return
+
+    deps = _gather_dependencies(workflows)
+    async with CLIENT as session:
+        latest = await _fetch_all_latest(session=session, dependencies=deps, cooldown=cooldown)
+
+    swap_to_sha(base_dir=root, raw_workflows=workflows, latest_releases=latest, dry_run=dry_run)
+
+
 def main() -> None:  # noqa: D103
     parser = argparse.ArgumentParser("CheckWorkflow")
     subparsers = parser.add_subparsers(dest="subcommand")
@@ -130,6 +148,17 @@ def main() -> None:  # noqa: D103
     bump_sub.add_argument("--sha", action="store_true", help="Pin to SHA")
     bump_sub.add_argument("--dry-run", action="store_true", help="Preview the requested diff")
 
+    # SHA swapper-inner
+    sha_sub = subparsers.add_parser(
+        "add_sha",
+        help="Replace version pins with SHA pins",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    sha_sub.add_argument(
+        "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
+    )
+    sha_sub.add_argument("--dry-run", action="store_true", help="Preview the requested diff")
+
     args = parser.parse_args()
     _set_log_level(args.verbose)
 
@@ -142,16 +171,7 @@ def main() -> None:  # noqa: D103
         asyncio.run(
             _local_report_pipeline(root=args.root, cooldown=cooldown, markdown=args.markdown)
         )
-    elif args.subcommand == "bump":
-        asyncio.run(
-            _local_bump_pipeline(
-                root=args.root,
-                cooldown=cooldown,
-                use_sha=args.sha,
-                dry_run=args.dry_run,
-            )
-        )
-    else:
+    elif args.subcommand == "remote":
         asyncio.run(
             _remote_report_pipeline(
                 org=args.org,
@@ -162,6 +182,25 @@ def main() -> None:  # noqa: D103
                 markdown=args.markdown,
             )
         )
+    elif args.subcommand == "bump":
+        asyncio.run(
+            _local_bump_pipeline(
+                root=args.root,
+                cooldown=cooldown,
+                use_sha=args.sha,
+                dry_run=args.dry_run,
+            )
+        )
+    elif args.subcommand == "add_sha":
+        asyncio.run(
+            _local_swap_sha_pipeline(
+                root=args.root,
+                cooldown=cooldown,
+                dry_run=args.dry_run,
+            )
+        )
+    else:
+        raise RuntimeError(f"Unknown subcommand: '{args.subcommand}'")
 
 
 if __name__ == "__main__":
