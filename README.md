@@ -29,7 +29,7 @@ release.yml
 
 ## Installation
 
-Since this is mainly intended as a personal helper, I do not intend to deploy this project to PyPI. Wheels are built in CI for each [released version](https://github.com/sco1/check-workflow/releases/latest).
+Since this is mainly intended as a personal helper, there is no intent to deploy this project to PyPI. Wheels are built in CI for each [released version](https://github.com/sco1/check-workflow/releases/latest).
 
 Alternatively, you can use a tool like `uv` or `pipx` to run or install this project as a standalone tool, e.g.:
 
