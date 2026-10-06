@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.5.1]`
+
+### Changed
+
+* #40 Remove schema validation when instantiating the GQL client
+
 ## `[v1.5.0]`
 
 ### Added

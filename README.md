@@ -34,7 +34,7 @@ Since this is mainly intended as a personal helper, there is no intent to deploy
 Alternatively, you can use a tool like `uv` or `pipx` to run or install this project as a standalone tool, e.g.:
 
 ```text
-$ uvx --from git+https://github.com/sco1/check-workflow@v1.5.0 CheckWorkflow --help
+$ uvx --from git+https://github.com/sco1/check-workflow@v1.5.1 CheckWorkflow --help
 usage: CheckWorkflow [-h] [-v] [-c COOLDOWN] {local,remote,bump,add_sha} ...
 
 positional arguments:

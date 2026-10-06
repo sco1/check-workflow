@@ -36,7 +36,7 @@ TRANSPORT = HTTPXAsyncTransport(
     headers={"Authorization": f"bearer {TOK}", "User-Agent": USER_AGENT},
     timeout=TIMEOUT,
 )
-CLIENT = Client(transport=TRANSPORT, fetch_schema_from_transport=True)
+CLIENT = Client(transport=TRANSPORT, fetch_schema_from_transport=False)
 
 WORKFLOW_QUERY = """
 query GetWorkflows($owner: String!, $repo: String!, $target: String!) {
