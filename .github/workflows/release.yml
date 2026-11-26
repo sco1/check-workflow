@@ -4,6 +4,8 @@ on:
   release:
     types: [published]
 
+permissions: {}
+
 jobs:
   build:
     name: Build dist & publish
@@ -13,16 +15,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.2.0
+        uses: astral-sh/setup-uv@v10.4.0
         with:
-          version: "0.12.x"
-          enable-cache: true
+          version: "0.13.x"
+          enable-cache: false
           cache-dependency-glob: "uv.lock"
 
       - name: Set up Python
-        uses: actions/setup-python@v7.0.0
+        uses: actions/setup-python@v7.1.0
         with:
           python-version-file: "pyproject.toml"
 
@@ -32,4 +36,5 @@ jobs:
       - name: Upload wheel to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./dist/check_workflow-*.whl
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" ./dist/check_workflow-*.whl

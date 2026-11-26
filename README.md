@@ -59,7 +59,7 @@ All subcommands provide the ability to specify a dependency cooldown period as `
 
 ### Local
 
-Check for dependency updates for GHA workflows defined in the specified root.
+Check for dependency updates for GHA workflows defined in the specified root. The root may be provided as a direct path to the workflows directory or the project's root; the latter assumes that workflows live in `./.github/workflows/`.
 
 <!-- [[[cog
 import cog
@@ -76,11 +76,11 @@ usage: CheckWorkflow local [-h] [-r ROOT] [-m]
 
 options:
   -h, --help       show this help message and exit
-  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  -r, --root ROOT  Workflow or project root (default: ./.github/workflows)
   -m, --markdown   Format report as markdown (default: False)
 ```
 
-<!-- [[[end]]] -->
+<!-- [[[end]]] (sum: LGGYb+zHR1) -->
 
 ### Remote
 
@@ -106,15 +106,15 @@ positional arguments:
 options:
   -h, --help           show this help message and exit
   -b, --branch BRANCH  Query branch (default: main)
-  -r, --root ROOT      Workflow root (default: .github/workflows/)
+  -r, --root ROOT      Workflow root (default: ./.github/workflows)
   -m, --markdown       Format report as markdown (default: False)
 ```
 
-<!-- [[[end]]] -->
+<!-- [[[end]]] (sum: uoPkOPvjju) -->
 
 ### Bump
 
-Automatically bump the dependencies for workflows defined at the specified local root.
+Automatically bump the dependencies for workflows defined at the specified local root. The root may be provided as a direct path to the workflows directory or the project's root; the latter assumes that workflows live in `./.github/workflows/`.
 
 <!-- [[[cog
 import cog
@@ -131,12 +131,12 @@ usage: CheckWorkflow bump [-h] [-r ROOT] [--sha] [--dry-run]
 
 options:
   -h, --help       show this help message and exit
-  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  -r, --root ROOT  Workflow or project root (default: ./.github/workflows)
   --sha            Pin to SHA (default: False)
   --dry-run        Preview the requested diff (default: False)
 ```
 
-<!-- [[[end]]] -->
+<!-- [[[end]]] (sum: HwuLeCQCfI) -->
 
 ### Add SHA
 
@@ -157,11 +157,11 @@ usage: CheckWorkflow add_sha [-h] [-r ROOT] [--dry-run]
 
 options:
   -h, --help       show this help message and exit
-  -r, --root ROOT  Workflow root (default: ./.github/workflows/)
+  -r, --root ROOT  Workflow or project root (default: ./.github/workflows)
   --dry-run        Preview the requested diff (default: False)
 ```
 
-<!-- [[[end]]] -->
+<!-- [[[end]]] (sum: R1o4bXC/F5) -->
 
 ## Why Don't You Just Use Dependabot?
 

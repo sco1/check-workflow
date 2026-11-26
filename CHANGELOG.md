@@ -2,6 +2,12 @@
 
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (`<major>`.`<minor>`.`<patch>`)
 
+## `[v1.6.0]`
+
+### Changed
+
+* #44 Local workflow resolution will also attempt to treat the provided root as the project root before failing
+
 ## `[v1.5.1]`
 
 ### Changed

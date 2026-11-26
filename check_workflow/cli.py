@@ -5,10 +5,16 @@ import logging
 import sys
 from pathlib import Path
 
+from check_workflow import WORKFLOW_ROOT
 from check_workflow.dep_bumper import bump_workflows
 from check_workflow.gh_api import CLIENT, fetch_workflows, parse_cooldown
 from check_workflow.sha_swap import _fetch_all_latest, _gather_dependencies, swap_to_sha
-from check_workflow.workflow import fetch_local, format_outdated, report_outdated
+from check_workflow.workflow import (
+    _resolve_workflow_dir,
+    fetch_local,
+    format_outdated,
+    report_outdated,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +120,7 @@ def main() -> None:  # noqa: D103
         "local", help="Query local project", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     local_sub.add_argument(
-        "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
+        "-r", "--root", type=Path, default=WORKFLOW_ROOT, help="Workflow or project root"
     )
     local_sub.add_argument(
         "-m", "--markdown", action="store_true", help="Format report as markdown"
@@ -129,9 +135,7 @@ def main() -> None:  # noqa: D103
     remote_sub.add_argument("org", type=str, help="Query repository parent")
     remote_sub.add_argument("repo", type=str, help="Query repository")
     remote_sub.add_argument("-b", "--branch", type=str, default="main", help="Query branch")
-    remote_sub.add_argument(
-        "-r", "--root", type=str, default=".github/workflows/", help="Workflow root"
-    )
+    remote_sub.add_argument("-r", "--root", type=str, default=WORKFLOW_ROOT, help="Workflow root")
     remote_sub.add_argument(
         "-m", "--markdown", action="store_true", help="Format report as markdown"
     )
@@ -143,7 +147,7 @@ def main() -> None:  # noqa: D103
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     bump_sub.add_argument(
-        "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
+        "-r", "--root", type=Path, default=WORKFLOW_ROOT, help="Workflow or project root"
     )
     bump_sub.add_argument("--sha", action="store_true", help="Pin to SHA")
     bump_sub.add_argument("--dry-run", action="store_true", help="Preview the requested diff")
@@ -155,7 +159,7 @@ def main() -> None:  # noqa: D103
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     sha_sub.add_argument(
-        "-r", "--root", type=Path, default="./.github/workflows/", help="Workflow root"
+        "-r", "--root", type=Path, default=WORKFLOW_ROOT, help="Workflow or project root"
     )
     sha_sub.add_argument("--dry-run", action="store_true", help="Preview the requested diff")
 
@@ -169,7 +173,9 @@ def main() -> None:  # noqa: D103
 
     if args.subcommand == "local":
         asyncio.run(
-            _local_report_pipeline(root=args.root, cooldown=cooldown, markdown=args.markdown)
+            _local_report_pipeline(
+                root=_resolve_workflow_dir(args.root), cooldown=cooldown, markdown=args.markdown
+            )
         )
     elif args.subcommand == "remote":
         asyncio.run(
@@ -185,7 +191,7 @@ def main() -> None:  # noqa: D103
     elif args.subcommand == "bump":
         asyncio.run(
             _local_bump_pipeline(
-                root=args.root,
+                root=_resolve_workflow_dir(args.root),
                 cooldown=cooldown,
                 use_sha=args.sha,
                 dry_run=args.dry_run,
@@ -194,7 +200,7 @@ def main() -> None:  # noqa: D103
     elif args.subcommand == "add_sha":
         asyncio.run(
             _local_swap_sha_pipeline(
-                root=args.root,
+                root=_resolve_workflow_dir(args.root),
                 cooldown=cooldown,
                 dry_run=args.dry_run,
             )

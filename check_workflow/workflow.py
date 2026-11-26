@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 import string
 import typing as t
 from collections import defaultdict
@@ -9,8 +10,10 @@ from packaging.version import Version
 from prettytable import PrettyTable, TableStyle
 from ruamel.yaml import YAML
 
-from check_workflow import WORKFLOW_T
+from check_workflow import WORKFLOW_ROOT, WORKFLOW_T
 from check_workflow.gh_api import Release, fetch_releases
+
+LOGGER = logging.getLogger(__name__)
 
 
 class UsesSpec(t.NamedTuple):  # noqa: D101
@@ -189,8 +192,31 @@ def format_outdated(
     return "\n".join(comps)
 
 
+def _resolve_workflow_dir(base_dir: Path) -> Path:
+    """
+    Basic resolver for the base GHA workflows directory, assumed to be `.../workflows/`.
+
+    If the provided `base_dir` is not the workflows directory, it is assumed to be the project's
+    root and `/.github/workflows` is appended.
+    """
+    # GitHub mandates that the top-level folder is `.github/workflows/` so this should be a good
+    # enough check
+    if base_dir.name.lower() != "workflows":
+        LOGGER.debug(
+            f"Provided base dir '{base_dir}' not a 'workflows' folder, treating as repo root"
+        )
+        base_dir = base_dir / WORKFLOW_ROOT
+
+    return base_dir
+
+
 def fetch_local(base_dir: Path) -> WORKFLOW_T:
-    """Parse all `*.yml` files present in the specified base directory."""
+    """
+    Parse all `*.yml` files present in the specified base directory.
+
+    NOTE: YAML files are searched for recursively relative to the provided `base_dir`. It is assumed
+    that the provided path is the `.github/workflows` directory; no verification is performed.
+    """
     workflows = {}
     for yml in base_dir.glob("*.yml", case_sensitive=False):
         workflows[yml.name] = yml.read_text()

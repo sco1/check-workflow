@@ -10,6 +10,7 @@ from check_workflow.workflow import (
     JobDependency,
     OutdatedDep,
     UsesSpec,
+    _resolve_workflow_dir,
     extract_workflow_dependencies,
     fetch_local,
     report_outdated,
@@ -232,9 +233,27 @@ async def test_report_outdated_caches(mocker: MockerFixture) -> None:
 
 
 def test_fetch_local(tmp_path: Path) -> None:
+    WF_DIR = tmp_path / ".github/workflows"
+    WF_DIR.mkdir(parents=True)
     YML_NAMES = {"abcd.yml", "another.yml"}
     for fn in YML_NAMES:
-        (tmp_path / fn).touch()
+        (WF_DIR / fn).touch()
 
-    workflows = fetch_local(tmp_path)
+    workflows = fetch_local(WF_DIR)
+    assert workflows.keys() == YML_NAMES
+
+
+def test_resolve_workflow_dir(tmp_path: Path) -> None:
+    WF_DIR = tmp_path / ".github/workflows"
+    WF_DIR.mkdir(parents=True)
+    YML_NAMES = {"abcd.yml", "another.yml"}
+    for fn in YML_NAMES:
+        (WF_DIR / fn).touch()
+
+    resolved = _resolve_workflow_dir(WF_DIR)
+    workflows = fetch_local(resolved)
+    assert workflows.keys() == YML_NAMES
+
+    resolved = _resolve_workflow_dir(tmp_path)
+    workflows = fetch_local(resolved)
     assert workflows.keys() == YML_NAMES
