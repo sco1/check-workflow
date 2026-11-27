@@ -9,9 +9,8 @@ from dataclasses import dataclass
 
 import httpx
 from dotenv import load_dotenv
-from gql import Client
+from gql import Client, gql
 from gql import __version__ as __gql_ver__
-from gql import gql
 from gql.client import AsyncClientSession
 from gql.transport.httpx import HTTPXAsyncTransport
 from httpx import Timeout
